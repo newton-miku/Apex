@@ -33,9 +33,6 @@
     <ClInclude Include="gui\XorString.h" />
     <ClInclude Include="Header Files\Driver.h" />
     <ClInclude Include="Header Files\offsets.h" />
-    <ClInclude Include="ShowHealth\DirectX.h" />
-    <ClInclude Include="ShowHealth\overlay.h" />
-    <ClInclude Include="ShowHealth\utils.h" />
     <ClInclude Include="Tools\Tools.h" />
     <ClInclude Include="Tools\xor.hpp" />
   </ItemGroup>
@@ -47,9 +44,6 @@
     <ClCompile Include="gui\imgui\imgui_tables.cpp" />
     <ClCompile Include="gui\imgui\imgui_widgets.cpp" />
     <ClCompile Include="gui\overlay.cpp" />
-    <ClCompile Include="ShowHealth\DirectX.cpp" />
-    <ClCompile Include="ShowHealth\overlay.cpp" />
-    <ClCompile Include="ShowHealth\utils.cpp" />
     <ClCompile Include="Source Files\main.cpp" />
     <ClCompile Include="Tools\Tools.cpp" />
   </ItemGroup>

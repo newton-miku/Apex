@@ -2,12 +2,9 @@
 using namespace std;
 
 extern int aim;
+extern bool aim_enable;
 extern bool esp;
-extern bool item_glow;
-extern int glow_num;
-extern bool glow_goldgun;
-extern bool glow_suit;
-extern bool glow_gunPart;
+
 
 extern bool player_glow;
 extern float glowplayer1[4];
@@ -15,11 +12,29 @@ extern float glowplayer2[4];
 extern float glowplayer3[4];
 extern float glowplayer4[4];
 
+extern bool item_glow;
+extern int glow_num;
+extern float gun_glow_col[4];
+
+extern bool glow_goldgun;
+extern bool glow_suit;
+extern bool glow_gunPart;
 extern float gold_item_col[4];
 extern float red_item_col[4];
 extern float purple_item_col[4];
+extern float blue_item_col[4];
+
+extern bool zoom_glow;
+extern int zoom_num;
 extern float zoom_col[4];
-extern float gun_glow_col[4];
+extern bool turbo_glow;
+extern bool fast_reload_glow;
+
+extern bool blue_glow;
+extern bool heat_shield_glow;
+extern bool Shield_Battery_glow;
+extern bool respawn_glow;
+extern bool blue_backpack_glow;
 
 extern bool aim_no_recoil;
 extern bool ready;
@@ -94,7 +109,7 @@ void CleanupRenderTarget();
 
 void Overlay::RenderMenu()
 {
-	static bool aim_enable = false;
+	
 	static bool vis_check = false;
 	static bool spec_disable = false;
 	static bool all_spec_disable = false;
@@ -116,9 +131,9 @@ void Overlay::RenderMenu()
 		aim_enable = false;
 		vis_check = false;
 	}
-
+	static ImGuiColorEditFlags alpha_flags = 0;
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
-	ImGui::SetNextWindowSize(ImVec2(490, 215));
+	ImGui::SetNextWindowSize(ImVec2(700, 500));
 	ImGui::Begin(XorStr(u8"仅供内部使用"), (bool*)true, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);//| ImGuiWindowFlags_NoScrollbar);
 	if (ImGui::BeginTabBar(XorStr("Tab")))
 	{
@@ -151,12 +166,15 @@ void Overlay::RenderMenu()
 
 			ImGui::Checkbox(XorStr(u8"物品发光"), &item_glow);
 			static bool output_only_modified = true;
-			static ImGuiColorEditFlags alpha_flags = 0;
+			
 			if (item_glow)
 			{
 				ImGui::Checkbox(XorStr(u8"金枪"), &glow_goldgun);
+				ImGui::Checkbox(XorStr(u8"涡轮"), &turbo_glow);
+				ImGui::Checkbox(XorStr(u8"加速装填器"), &fast_reload_glow);
 				ImGui::Checkbox(XorStr(u8"紫金装备"), &glow_suit);
 				ImGui::Checkbox(XorStr(u8"紫金配件"), &glow_gunPart);
+				
 				if (ImGui::Combo(u8"枪械发光", &glow_item_index, u8"奥犬\0 Lstar\0哈沃克\0专注\0三重\0平行\0汗落\0转换者\0 r99\0猎兽\0长弓\0滋蹦\0 r301\0 eva8\0莫桑比克\0和平喷\0小帮手\0 p2020\0 re45\0哨兵\0弓\0 3030\0暴走\0 car\0\0"))
 				{
 					switch (glow_item_index)
@@ -187,15 +205,47 @@ void Overlay::RenderMenu()
 					case 23: glow_num = 132; break;//car
 					}
 				}
-				ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			}
-			ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
+			
 			//ImGui::Checkbox(XorStr("Thirdperson"), &thirdperson);
+			ImGui::EndTabItem();
+			ImGui::BeginTabItem(XorStr(u8"蓝色物资发光"));
+			ImGui::Checkbox(XorStr(u8"蓝色物资"), &blue_glow);
+			if (blue_glow) {
+				ImGui::Checkbox(XorStr(u8"隔热板"), &heat_shield_glow);
+				ImGui::Checkbox(XorStr(u8"移动重生信标"), &respawn_glow);
+				ImGui::Checkbox(XorStr(u8"大电"), &Shield_Battery_glow);
+				ImGui::Checkbox(XorStr(u8"蓝包"), &blue_backpack_glow);
+			}
+		/*}
+		if (item_glow) {*/
+			ImGui::BeginTabItem(XorStr(u8"物品发光颜色设置"));
+			ImGui::ColorEdit4(u8"蓝色品质", (float*)blue_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"紫色品质", (float*)purple_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem(XorStr(u8"玩家发光")))
 		{
-			
+			ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
+			if (player_glow)
+			{
+				ImGui::ColorEdit4(u8"可见敌人颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"可见倒地颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			}
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem(XorStr(u8"瞄准镜发光"))) {
+			ImGui::Checkbox(XorStr(u8"瞄准镜发光"),&zoom_glow);
+			if (zoom_glow) 
+			{
+				ImGui::Combo(u8"瞄准镜发光", &zoom_num, u8"1x\0 2x\0圆1x\0 1-2x\0金1x\0 3x\0 2-4x\0 6x\0 4-8x\0 4-10x\0\0");
+				ImGui::ColorEdit4(u8"瞄准镜发光颜色", (float*)zoom_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			}
+			ImGui::EndTabItem();
 		}
 		/*if (ImGui::BeginTabItem(XorStr("Config")))
 		{

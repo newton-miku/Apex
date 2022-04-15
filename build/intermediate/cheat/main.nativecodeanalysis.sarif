@@ -1,0 +1,1127 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "runs": [
+    {
+      "results": [
+        {
+          "ruleId": "C6289",
+          "message": {
+            "text": "运算符不正确: 基于 || 的互斥运算为非零常量。 是否原本要使用 &&?"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 7,
+                  "endLine": 50,
+                  "endColumn": 35
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??RHandleDisposer@@QEBAXPEAX@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C6387",
+          "message": {
+            "text": "“handle”可能是“0”: 这不符合函数“CloseHandle”的规范。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                },
+                "region": {
+                  "startLine": 52,
+                  "startColumn": 4,
+                  "endLine": 52,
+                  "endColumn": 16
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??RHandleDisposer@@QEBAXPEAX@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 50,
+                            "startColumn": 22
+                          }
+                        },
+                        "message": {
+                          "text": "“handle”可能为 NULL (进入此分支)"
+                        }
+                      },
+                      "kinds": [
+                        "branch"
+                      ],
+                      "importance": "important"
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 52,
+                            "startColumn": 15
+                          }
+                        },
+                        "message": {
+                          "text": "“handle”是对“CloseHandle”的输入(在 c:\\program files (x86)\\windows kits\\10\\include\\10.0.19041.0\\um\\handleapi.h:38 处声明)"
+                        }
+                      },
+                      "kinds": [
+                        "usage"
+                      ],
+                      "importance": "important"
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 52,
+                            "startColumn": 15
+                          }
+                        },
+                        "message": {
+                          "text": "“handle”不应为 NULL，因为这与“CloseHandle”上的 SAL 批注不一致"
+                        }
+                      },
+                      "kinds": [
+                        "usage"
+                      ],
+                      "importance": "essential"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_DEPTH_WRITE_MASK”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 1399,
+                  "startColumn": 9,
+                  "endLine": 1399,
+                  "endColumn": 26
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_DEPTH_STENCIL_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_COMPARISON_FUNC”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 1400,
+                  "startColumn": 9,
+                  "endLine": 1400,
+                  "endColumn": 21
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_DEPTH_STENCIL_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_STENCIL_OP”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 1409,
+                  "startColumn": 5,
+                  "endLine": 1409,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_DEPTH_STENCIL_DESC@@QEAA@HW4D3D11_DEPTH_WRITE_MASK@@W4D3D11_COMPARISON_FUNC@@HEEW4D3D11_STENCIL_OP@@2212221@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_FILL_MODE”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 1822,
+                  "startColumn": 9,
+                  "endLine": 1822,
+                  "endColumn": 20
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_RASTERIZER_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_CULL_MODE”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 1823,
+                  "startColumn": 9,
+                  "endLine": 1823,
+                  "endColumn": 20
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_RASTERIZER_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_USAGE”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 2184,
+                  "startColumn": 5,
+                  "endLine": 2184,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_BUFFER_DESC@@QEAA@IIW4D3D11_USAGE@@III@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“DXGI_FORMAT”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 2380,
+                  "startColumn": 5,
+                  "endLine": 2380,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_TEXTURE1D_DESC@@QEAA@W4DXGI_FORMAT@@IIIIW4D3D11_USAGE@@II@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D_SRV_DIMENSION”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 3226,
+                  "startColumn": 5,
+                  "endLine": 3226,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_SHADER_RESOURCE_VIEW_DESC@@QEAA@W4D3D_SRV_DIMENSION@@W4DXGI_FORMAT@@IIIII@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_RTV_DIMENSION”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 3646,
+                  "startColumn": 5,
+                  "endLine": 3646,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_RENDER_TARGET_VIEW_DESC@@QEAA@W4D3D11_RTV_DIMENSION@@W4DXGI_FORMAT@@III@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_DSV_DIMENSION”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 4151,
+                  "startColumn": 5,
+                  "endLine": 4151,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_DEPTH_STENCIL_VIEW_DESC@@QEAA@W4D3D11_DSV_DIMENSION@@W4DXGI_FORMAT@@IIII@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_UAV_DIMENSION”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 4478,
+                  "startColumn": 5,
+                  "endLine": 4478,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_UNORDERED_ACCESS_VIEW_DESC@@QEAA@W4D3D11_UAV_DIMENSION@@W4DXGI_FORMAT@@IIII@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_FILTER”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 5647,
+                  "startColumn": 9,
+                  "endLine": 5647,
+                  "endColumn": 18
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_SAMPLER_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_TEXTURE_ADDRESS_MODE”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 5648,
+                  "startColumn": 9,
+                  "endLine": 5648,
+                  "endColumn": 20
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_SAMPLER_DESC@@QEAA@UCD3D11_DEFAULT@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_QUERY”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 6042,
+                  "startColumn": 5,
+                  "endLine": 6042,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_QUERY_DESC@@QEAA@W4D3D11_QUERY@@I@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_COUNTER”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+                },
+                "region": {
+                  "startLine": 6376,
+                  "startColumn": 5,
+                  "endLine": 6376,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D11_COUNTER_DESC@@QEAA@W4D3D11_COUNTER@@I@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D10_USAGE”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d10.h"
+                },
+                "region": {
+                  "startLine": 1615,
+                  "startColumn": 5,
+                  "endLine": 1615,
+                  "endColumn": 5
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??0CD3D10_BUFFER_DESC@@QEAA@IIW4D3D10_USAGE@@II@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26812",
+          "message": {
+            "text": "枚举类型“D3D11_RLDO_FLAGS”未设定范围。相比于 \"enum\"，首选 \"enum class\" (Enum.3)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11sdklayers.h"
+                },
+                "region": {
+                  "startLine": 98,
+                  "startColumn": 25,
+                  "endLine": 98,
+                  "endColumn": 25
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "~",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C6297",
+          "message": {
+            "text": "算术溢出: 对 32 位值进行移位操作，然后强制转换为 64 位值。 结果可能不是预期值。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 127,
+                  "startColumn": 38,
+                  "endLine": 127,
+                  "endColumn": 45
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?GetEntityById@@YA_KH_K@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26451",
+          "message": {
+            "text": "算术溢出: 使用 4 字节值上的运算符 << ，然后将结果转换到 8 字节值。在调用运算符 << 之前将值强制转换为宽类型可避免溢出(io.2)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 127,
+                  "startColumn": 38,
+                  "endLine": 127,
+                  "endColumn": 45
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?GetEntityById@@YA_KH_K@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26451",
+          "message": {
+            "text": "算术溢出: 使用 4 字节值上的运算符 * ，然后将结果转换到 8 字节值。在调用运算符 * 之前将值强制转换为宽类型可避免溢出(io.2)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 186,
+                  "startColumn": 50,
+                  "endLine": 186,
+                  "endColumn": 59
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?GetEntityBonePosition@@YA?AUVector3@@_KIU1@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26451",
+          "message": {
+            "text": "算术溢出: 使用 4 字节值上的运算符 * ，然后将结果转换到 8 字节值。在调用运算符 * 之前将值强制转换为宽类型可避免溢出(io.2)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 187,
+                  "startColumn": 50,
+                  "endLine": 187,
+                  "endColumn": 59
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?GetEntityBonePosition@@YA?AUVector3@@_KIU1@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C26451",
+          "message": {
+            "text": "算术溢出: 使用 4 字节值上的运算符 * ，然后将结果转换到 8 字节值。在调用运算符 * 之前将值强制转换为宽类型可避免溢出(io.2)。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 188,
+                  "startColumn": 50,
+                  "endLine": 188,
+                  "endColumn": 59
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?GetEntityBonePosition@@YA?AUVector3@@_KIU1@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C6066",
+          "message": {
+            "text": "传递了非指针作为 _Param_(2)，而对“printf”的调用需要指针参数，实际类型: “unsigned int”。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 335,
+                  "startColumn": 3,
+                  "endLine": 335,
+                  "endColumn": 141
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?gui@@YAXXZ",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C6066",
+          "message": {
+            "text": "传递了非指针作为 _Param_(2)，而对“printf”的调用需要指针参数，实际类型: “unsigned __int64”。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+                },
+                "region": {
+                  "startLine": 343,
+                  "startColumn": 3,
+                  "endLine": 343,
+                  "endColumn": 27
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "?gui@@YAXXZ",
+                  "kind": "function"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "C6387",
+          "message": {
+            "text": "“Temp_value_#653”可能是“0”: 这不符合函数“GetProcAddress”的规范。"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 8,
+                  "endLine": 64,
+                  "endColumn": 67
+                }
+              },
+              "logicalLocations": [
+                {
+                  "decoratedName": "??$CallHook@PEAU_NULL_MEMORY@@@@YA_KQEAU_NULL_MEMORY@@@Z",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 64,
+                            "startColumn": 8
+                          }
+                        },
+                        "message": {
+                          "text": "“<符号>”接收来自“LoadLibraryA”的返回值(在 c:\\program files (x86)\\windows kits\\10\\include\\10.0.19041.0\\um\\libloaderapi.h:657 处声明)"
+                        }
+                      },
+                      "kinds": [
+                        "declaration"
+                      ],
+                      "importance": "important"
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 64,
+                            "startColumn": 8
+                          }
+                        },
+                        "message": {
+                          "text": "“<符号>”接收来自“LoadLibraryA”的返回值(在 c:\\program files (x86)\\windows kits\\10\\include\\10.0.19041.0\\um\\libloaderapi.h:657 处声明)"
+                        }
+                      },
+                      "kinds": [
+                        "declaration"
+                      ],
+                      "importance": "important"
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+                          },
+                          "region": {
+                            "startLine": 64,
+                            "startColumn": 8
+                          }
+                        },
+                        "message": {
+                          "text": "“Temp_value_#653”不应为 NULL，因为这与“GetProcAddress”上的 SAL 批注不一致"
+                        }
+                      },
+                      "kinds": [
+                        "usage"
+                      ],
+                      "importance": "essential"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "PREfast",
+          "fullName": "PREfast Code Analysis",
+          "version": "14.29.30141.0",
+          "informationUri": "https://aka.ms/cpp/ca"
+        }
+      },
+      "invocations": [
+        {
+          "commandLine": "F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX86\\x64\\c1xx.dll -ACf{1F7B090C-16DB-4822-966A-A93D26ED4681} -ACpmspft140.dll -Alint -D_PREFAST_ -D_AST_FE_ -Analyze -zm0x00DBC1B0 -il C:\\Users\\HASEE\\AppData\\Local\\Temp\\_CL_ce78a849ast -typedil -f Source Files\\main.cpp -Ze -D_MSC_EXTENSIONS -Zp16 -pc \\:/ -D_MSC_VER=1929 -D_MSC_FULL_VER=192930141 -D_MSC_BUILD=0 -D_M_AMD64=100 -ZILP448 -D_M_X64=100 -D_WIN64 -D_WIN32 -GR -D_CPPRTTI -nologo -W 4 -diagnostics:column -GF -Og -Oi -Oy -Ot -ltcg -DCODE_ANALYSIS -DNDEBUG -D_CONSOLE -D_UNICODE -DUNICODE -EHs -D_CPPUNWIND -EHc -MT -clrNoPureCRT -D_MT -GS -D_M_FP_PRECISE -permissive- -Zc:wchar_t -Zc:forScope -std:c++17 -FoF:\\Apex hack\\project\\Apex透视v1.3\\\\build\\intermediate\\cheat\\main.obj -FdF:\\Apex hack\\project\\Apex透视v1.3\\\\build\\intermediate\\cheat\\vc142.pdb -external:W 4 -Gd -analyze:projectdirectory F:\\Apex hack\\project\\Apex透视v1.3\\cheat -analyze:rulesetdirectory ;F:\\vc\\Team Tools\\Static Analysis Tools\\\\Rule Sets; -analyze:ruleset F:\\vc\\Team Tools\\Static Analysis Tools\\Rule Sets\\NativeRecommendedRules.ruleset -analyze:quiet -analyze:plugin F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX86\\x86\\EspXEngine.dll -errorreport:prompt -I C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\include -I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\include -I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\atlmfc\\include -I F:\\vc\\VC\\Auxiliary\\VS\\include -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\shared -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\winrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\cppwinrt -I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um -external:I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\include -I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\include -external:I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\atlmfc\\include -I F:\\vc\\VC\\Tools\\MSVC\\14.29.30133\\atlmfc\\include -external:I F:\\vc\\VC\\Auxiliary\\VS\\include -I F:\\vc\\VC\\Auxiliary\\VS\\include -external:I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt -external:I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um -external:I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\shared -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\shared -external:I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\winrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\winrt -external:I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\cppwinrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\cppwinrt -external:I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um -I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um",
+          "executionSuccessful": true
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Header Files/Driver.h"
+          },
+          "roles": [
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "c7f0c11d88acf413b04a5e083a360f58"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11.h"
+          },
+          "roles": [
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "97cc6cca53aac7e9094d7add368c7824"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d10.h"
+          },
+          "roles": [
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "63e1ca4e354d9cd47c4df3ee4b965bd5"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/include/d3d11sdklayers.h"
+          },
+          "roles": [
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "84bd0d87947f5240cd566051a9683a95"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///F:/Apex hack/project/Apex透视v1.3/cheat/Source Files/main.cpp"
+          },
+          "roles": [
+            "analysisTarget",
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "d8c486839c9b7454393d8099f5243442"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/rpcsal.h"
+          },
+          "hashes": {
+            "md5": "fec1415e1273d783e79090571a83934e"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/tools/xor.hpp"
+          },
+          "hashes": {
+            "md5": "9dcb086c7f06b980dcebf62ad10e171f"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/tools/tools.h"
+          },
+          "hashes": {
+            "md5": "702fce097a49e6e3a357432a5029652e"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/header files/offsets.h"
+          },
+          "hashes": {
+            "md5": "11de09d84a75ad631d778b0ebfa50e11"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/gui.h"
+          },
+          "hashes": {
+            "md5": "7cd7fa0c41f3c11c4839398c418fca92"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/overlay.h"
+          },
+          "hashes": {
+            "md5": "3ac340a035d4c6d27ac7d6b46f0b5f8d"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/xorstring.h"
+          },
+          "hashes": {
+            "md5": "ad39fbce06c3b4c9fd22137b30034b0d"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/imgui/imgui.h"
+          },
+          "hashes": {
+            "md5": "9174a52257c3c8d0df1b1bf2000ea617"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/imgui/imconfig.h"
+          },
+          "hashes": {
+            "md5": "1f8f757615416f541010da4d739008d2"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/imgui/imgui_impl_dx11.h"
+          },
+          "hashes": {
+            "md5": "14bd217c3f5bef28ca4c8da9fc939dda"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/imgui/imgui_impl_win32.h"
+          },
+          "hashes": {
+            "md5": "36e75e4cdbace766f8668ed900560be7"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/dxgi.h"
+          },
+          "hashes": {
+            "md5": "4278d5ca9347595a6cef17ec5be8ce3e"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/dxgitype.h"
+          },
+          "hashes": {
+            "md5": "4948907bb7ed7614ee3857a5f75f9e0d"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/dxgiformat.h"
+          },
+          "hashes": {
+            "md5": "c78bc56ced1572f9e0117ae068b42bfc"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3dcommon.h"
+          },
+          "hashes": {
+            "md5": "55e982c069aae978deac715dd66075c8"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10_1.h"
+          },
+          "hashes": {
+            "md5": "c49ff3ab5831a6349b7e6549f13955db"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10sdklayers.h"
+          },
+          "hashes": {
+            "md5": "c3bba4e358f0ec6316bde2ec70ef4cf6"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10misc.h"
+          },
+          "hashes": {
+            "md5": "e3377429707328b5e022c16918f7d838"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10shader.h"
+          },
+          "hashes": {
+            "md5": "160f140b0ff4d14ab676372b5fff77ed"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10effect.h"
+          },
+          "hashes": {
+            "md5": "c15e891b2992edd9dd7a1cec22b7e452"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/program files (x86)/microsoft directx sdk (june 2010)/include/d3d10_1shader.h"
+          },
+          "hashes": {
+            "md5": "911da8a5b0818d351e96283e935691b7"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///f:/apex hack/project/apex透视v1.3/cheat/gui/font.h"
+          },
+          "hashes": {
+            "md5": "b6f68e42371bff069974bbc4630cbb0f"
+          }
+        }
+      ]
+    }
+  ]
+}

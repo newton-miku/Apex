@@ -13,7 +13,9 @@ extern float playerglow3[4];
 extern float playerglow4[4];
 
 extern bool item_glow;
-extern int glow_num;
+extern int glow_gun_num;
+extern int max_check_glow_item_num;
+extern bool glow_gun;
 extern float gun_glow_col[4];
 
 extern bool glow_supply_gun;
@@ -25,6 +27,12 @@ extern float gold_item_col[4];
 extern float red_item_col[4];
 extern float purple_item_col[4];
 extern float blue_item_col[4];
+
+extern int8_t item_main_glow_type;
+extern int8_t item_border_glow_type;
+
+extern int8_t player_main_glow_type;
+extern int8_t player_border_glow_type;
 
 extern bool zoom_glow;
 extern int zoom_num;
@@ -62,6 +70,8 @@ LONG nv_edit = nv_default_in_game | WS_VISIBLE;
 LONG nv_ex_default = WS_EX_TOOLWINDOW;
 LONG nv_ex_edit = nv_ex_default | WS_EX_LAYERED | WS_EX_TRANSPARENT;
 LONG nv_ex_edit_menu = nv_ex_default | WS_EX_TRANSPARENT;
+
+
 
 static DWORD WINAPI StaticMessageStart(void* Param)
 {
@@ -164,12 +174,11 @@ void Overlay::RenderMenu()
 			{
 				aim = 0;
 			}*/
-			static int glow_item_index = -1;
 			
-
+			static int glow_item_index = -1;
 			ImGui::Checkbox(XorStr(u8"物品发光"), &item_glow);
 			static bool output_only_modified = true;
-
+			
 			if (item_glow)
 			{
 				ImGui::Checkbox(XorStr(u8"空投枪"), &glow_supply_gun);
@@ -178,35 +187,38 @@ void Overlay::RenderMenu()
 				ImGui::Checkbox(XorStr(u8"加速装填器"), &fast_reload_glow);
 				ImGui::Checkbox(XorStr(u8"紫金装备"), &glow_suit);
 				ImGui::Checkbox(XorStr(u8"紫金配件"), &glow_gunPart);
-
-				if (ImGui::Combo(u8"枪械发光", &glow_item_index, u8"奥犬\0 Lstar\0哈沃克\0专注\0三重\0平行\0汗落\0转换者\0 r99\0猎兽\0长弓\0滋蹦\0 r301\0 eva8\0莫桑比克\0和平喷\0小帮手\0 p2020\0 re45\0哨兵\0弓\0 3030\0暴走\0 car\0\0"))
-				{
-					switch (glow_item_index)
+				ImGui::Checkbox(XorStr(u8"枪械发光"), &glow_gun);
+				
+				if (glow_gun) {
+					if (ImGui::Combo(u8"总发光类型", &glow_item_index, u8"敖犬\0 Lstar\0哈沃克\0专注\0三重\0平行\0汗落\0转换者\0 r99\0猎兽\0长弓\0滋崩\0 r301\0 eva8\0莫桑比克\0和平喷\0小帮手\0 p2020\0 re45\0哨兵\0弓\0 3030\0暴走\0 car\0\0"))
 					{
-					case 0: glow_num = 2; break;//敖犬
-					case 1: glow_num = 7; break;//Lstar
-					case 2: glow_num = 12; break;//哈沃克
-					case 3: glow_num = 17; break;//专注
-					case 4: glow_num = 22; break;//三重
-					case 5: glow_num = 27; break;//平行
-					case 6: glow_num = 32; break;//汗洛
-					case 7: glow_num = 42; break;//转换者
-					case 8: glow_num = 47; break;//r99
-					case 9: glow_num = 52; break;//猎兽
-					case 10: glow_num = 58; break;//长弓
-					case 11: glow_num = 63; break;//滋崩
-					case 12: glow_num = 69; break;//r301
-					case 13: glow_num = 74; break;//eva8
-					case 14: glow_num = 79; break;//莫桑比克
-					case 15: glow_num = 84; break;//和平
-					case 16: glow_num = 90; break;//小帮手
-					case 17: glow_num = 95; break;//p2020
-					case 18: glow_num = 100; break;//re45
-					case 19: glow_num = 105; break;//哨兵
-					case 20: glow_num = 110; break;//弓
-					case 21: glow_num = 115; break;//3030
-					case 22: glow_num = 127; break;//暴走
-					case 23: glow_num = 132; break;//car
+						switch (glow_item_index)
+						{
+						case 0: glow_gun_num = 2; break;//敖犬
+						case 1: glow_gun_num = 7; break;//Lstar
+						case 2: glow_gun_num = 12; break;//哈沃克
+						case 3: glow_gun_num = 17; break;//专注
+						case 4: glow_gun_num = 22; break;//三重
+						case 5: glow_gun_num = 27; break;//平行
+						case 6: glow_gun_num = 32; break;//汗洛
+						case 7: glow_gun_num = 42; break;//转换者
+						case 8: glow_gun_num = 47; break;//r99
+						case 9: glow_gun_num = 52; break;//猎兽
+						case 10: glow_gun_num = 58; break;//长弓
+						case 11: glow_gun_num = 63; break;//滋崩
+						case 12: glow_gun_num = 69; break;//r301
+						case 13: glow_gun_num = 74; break;//eva8
+						case 14: glow_gun_num = 79; break;//莫桑比克
+						case 15: glow_gun_num = 84; break;//和平
+						case 16: glow_gun_num = 90; break;//小帮手
+						case 17: glow_gun_num = 95; break;//p2020
+						case 18: glow_gun_num = 100; break;//re45
+						case 19: glow_gun_num = 105; break;//哨兵
+						case 20: glow_gun_num = 110; break;//弓
+						case 21: glow_gun_num = 115; break;//3030
+						case 22: glow_gun_num = 127; break;//暴走
+						case 23: glow_gun_num = 132; break;//car
+						}
 					}
 				}
 			}
@@ -229,54 +241,52 @@ void Overlay::RenderMenu()
 		}
 		
 		if (item_glow) {
-			if (ImGui::BeginTabItem(XorStr(u8"物品发光颜色设置"))) 
+			if (ImGui::BeginTabItem(XorStr(u8"物品发光设置"))) 
 			{
+				ImGui::Text(XorStr(u8"最大检测数目")); 
+				ImGui::SameLine();
+				//HelpMarker(u8"将该值调低可能会影响物品发光检测范围，甚至可能检测不到\n但较低的值可降低检测敌人延迟");
+				ImGui::SliderInt(XorStr("##3"), &max_check_glow_item_num, 5000, 50000, "%d");
+				static int main_glow1 = -1;
+				static int border_glow1 = -1;
 				ImGui::ColorEdit4(u8"蓝色品质", (float*)blue_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"紫色品质", (float*)purple_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::Text(u8"物品发光类型设置");
+				if (ImGui::Combo(u8"总发光类型", &main_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
+				{
+					switch (main_glow1)
+					{
+						case 0: item_main_glow_type = 101; break;
+						case 1: item_main_glow_type = 102; break;
+						case 2: item_main_glow_type = 103; break;
+						case 3: item_main_glow_type = 104; break;
+						case 4: item_main_glow_type = 105; break;
+						case 5: item_main_glow_type = 106; break;
+					}
+				}
+				if (ImGui::Combo(u8"边界发光类型", &border_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
+				{
+					switch (border_glow1)
+					{
+						case 0: item_border_glow_type = 101; break;
+						case 1: item_border_glow_type = 102; break;
+						case 2: item_border_glow_type = 103; break;
+						case 3: item_border_glow_type = 104; break;
+						case 4: item_border_glow_type = 105; break;
+						case 5: item_border_glow_type = 106; break;
+					}
+				}
 				ImGui::EndTabItem();
 			}
 		}
 		if(item_glow){
 			if (ImGui::BeginTabItem(XorStr(u8"倍镜发光")))
 			{
-				
-				ImGui::Checkbox(XorStr(u8"倍镜发光"), &zoom_glow);
-				static int zoom = -1;
-				if (zoom_glow)
-				{
-					
-					if (ImGui::Combo(u8"枪械发光", &zoom_num, u8"1x\0 2x\0圆1x\0 1-2x\0金1x\0 3x\0 2-4x\0 6x\0 4-8x\0 4-10x\0\0"))
-				{
-					/*switch (glow_item_index)
-					{
-					case 0: glow_num = 2; break;//敖犬
-					case 1: glow_num = 7; break;//Lstar
-					case 2: glow_num = 12; break;//哈沃克
-					case 3: glow_num = 17; break;//专注
-					case 4: glow_num = 22; break;//三重
-					case 5: glow_num = 27; break;//平行
-					case 6: glow_num = 32; break;//汗洛
-					case 7: glow_num = 42; break;//转换者
-					case 8: glow_num = 47; break;//r99
-					case 9: glow_num = 52; break;//猎兽
-					case 10: glow_num = 58; break;//长弓
-					case 11: glow_num = 63; break;//滋崩
-					case 12: glow_num = 69; break;//r301
-					case 13: glow_num = 74; break;//eva8
-					case 14: glow_num = 79; break;//莫桑比克
-					case 15: glow_num = 84; break;//和平
-					case 16: glow_num = 90; break;//小帮手
-					case 17: glow_num = 95; break;//p2020
-					case 18: glow_num = 100; break;//re45
-					case 19: glow_num = 105; break;//哨兵
-					case 20: glow_num = 110; break;//弓
-					case 21: glow_num = 115; break;//3030
-					case 22: glow_num = 127; break;//暴走
-					case 23: glow_num = 132; break;//car
-					}*/
-				}
+				ImGui::Checkbox(XorStr(u8"倍镜发光"), &zoom_glow);	
+				if (zoom_glow){
+					ImGui::Combo(u8"总发光类型", &zoom_num, u8"1x\0 2x\0圆1x\0 1-2x\0金1x\0 3x\0 2-4x\0 6x\0 4-8x\0 4-10x\0\0");
 					ImGui::ColorEdit4(u8"倍镜发光颜色", (float*)zoom_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				}
 				ImGui::EndTabItem();
@@ -317,6 +327,8 @@ void Overlay::RenderMenu()
 	ImGui::Text(XorStr("Overlay FPS: %.3f ms/frame (%.1f FPS)"), 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	if (ImGui::BeginTabBar(XorStr(u8"玩家发光")))
 	{
+		static int main_glow2 = -1;
+		static int border_glow2 = -1;
 		ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
 		if (player_glow)
 		{
@@ -324,6 +336,30 @@ void Overlay::RenderMenu()
 			ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)playerglow4, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
+			{
+				switch (main_glow2)
+				{
+				case 0: player_main_glow_type = 101; break;
+				case 1: player_main_glow_type = 102; break;
+				case 2: player_main_glow_type = 103; break;
+				case 3: player_main_glow_type = 104; break;
+				case 4: player_main_glow_type = 105; break;
+				case 5: player_main_glow_type = 106; break;
+				}
+			}
+			if (ImGui::Combo(u8"边界发光类型", &border_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
+			{
+				switch (border_glow2)
+				{
+				case 0: player_border_glow_type = 101; break;
+				case 1: player_border_glow_type = 102; break;
+				case 2: player_border_glow_type = 103; break;
+				case 3: player_border_glow_type = 104; break;
+				case 4: player_border_glow_type = 105; break;
+				case 5: player_border_glow_type = 106; break;
+				}
+			}
 		}
 		ImGui::EndTabBar();
 	}
@@ -389,7 +425,7 @@ DWORD Overlay::CreateOverlay()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	ImFont* font = io.Fonts->AddFontFromMemoryTTF((void*)font_data, font_size, 17.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+	ImFont* font = io.Fonts->AddFontFromMemoryTTF((void*)font_data, font_size, 17.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());//   GetGlyphRangesChineseSimplifiedCommon());
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle().WindowMinSize = ImVec2(1, 1);

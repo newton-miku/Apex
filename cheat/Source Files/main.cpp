@@ -54,6 +54,7 @@ int aim = 0; //read
 bool aim_enable = false;
 bool esp = false; //read
 
+int max_check_glow_item_num = 20000;//物品发光最大遍历数
 bool item_glow = false;//物品发光
 bool turbo_glow = false;//涡轮
 bool fast_reload_glow = false;//加速装填器
@@ -67,6 +68,12 @@ float purple_item_col[4] = { 0.588235f, 0.0f, 1.0f, 0.9f };//紫色
 float blue_item_col[4] = {0.2805f, 0.7558f, 1.0f, 0.9f};//蓝色
 
 float gun_glow_col[4] = { 1.0f, 0.607f, 0.0f, 0.9f };//枪械发光
+
+int8_t item_main_glow_type = 101;//物品主发光类型
+int8_t item_border_glow_type = 101;//物品发光边界类型
+
+int8_t player_main_glow_type = 101;//玩家发光主类型
+int8_t player_border_glow_type = 101;//玩家发光边界类型
 
 bool player_glow = true;//玩家发光
 float playerglow1[4] = { 0.0f, 0.837104f, 0.056f, 0.9f };//可见敌人
@@ -91,7 +98,9 @@ float max_dist = 200.0f * 40.0f; //read
 float smooth = 12.0f;
 float max_fov = 15.0f;
 int bone = 2;
-int glow_num = -1;
+
+bool glow_gun = false;
+int glow_gun_num = -1;
 bool thirdperson = false;
 
 bool valid = true; //write
@@ -272,7 +281,7 @@ void player_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + GLOW_TYPE, { 101,101,40,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,40,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + 0x1D0, color[0]*255); // r color/brightness of not visible enemies
 	write<float>(Entity + 0x1D4, color[1]*255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
@@ -281,7 +290,7 @@ void item_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { 101,101,43,85 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { item_main_glow_type,item_border_glow_type,43,85 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
 	write<float>(Entity + 0x1D4, color[1] * 255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
@@ -554,10 +563,10 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			//Sleep(100);
 		}
 		if (item_glow) {
-			for (int i = 0; i <= 50000; i++) {
+			for (int i = 0; i <= max_check_glow_item_num; i++) {
 				DWORD64 Entity = GetEntityById(i, oBaseAddress);
 				int itemid = read<int>(Entity + OFFSET_ITEM_ID);
-				if (itemid == glow_num)
+				if (glow_gun && itemid == glow_gun_num)
 				{
 					item_glow_f(Entity, gun_glow_col);//选择的武器
 				}

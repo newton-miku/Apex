@@ -7,14 +7,16 @@ extern bool esp;
 
 
 extern bool player_glow;
-extern float glowplayer1[4];
-extern float glowplayer2[4];
-extern float glowplayer3[4];
-extern float glowplayer4[4];
+extern float playerglow1[4];
+extern float playerglow2[4];
+extern float playerglow3[4];
+extern float playerglow4[4];
 
 extern bool item_glow;
 extern int glow_num;
 extern float gun_glow_col[4];
+
+extern bool glow_supply_gun;
 
 extern bool glow_goldgun;
 extern bool glow_suit;
@@ -163,18 +165,20 @@ void Overlay::RenderMenu()
 				aim = 0;
 			}*/
 			static int glow_item_index = -1;
+			
 
 			ImGui::Checkbox(XorStr(u8"物品发光"), &item_glow);
 			static bool output_only_modified = true;
-			
+
 			if (item_glow)
 			{
+				ImGui::Checkbox(XorStr(u8"空投枪"), &glow_supply_gun);
 				ImGui::Checkbox(XorStr(u8"金枪"), &glow_goldgun);
 				ImGui::Checkbox(XorStr(u8"涡轮"), &turbo_glow);
 				ImGui::Checkbox(XorStr(u8"加速装填器"), &fast_reload_glow);
 				ImGui::Checkbox(XorStr(u8"紫金装备"), &glow_suit);
 				ImGui::Checkbox(XorStr(u8"紫金配件"), &glow_gunPart);
-				
+
 				if (ImGui::Combo(u8"枪械发光", &glow_item_index, u8"奥犬\0 Lstar\0哈沃克\0专注\0三重\0平行\0汗落\0转换者\0 r99\0猎兽\0长弓\0滋蹦\0 r301\0 eva8\0莫桑比克\0和平喷\0小帮手\0 p2020\0 re45\0哨兵\0弓\0 3030\0暴走\0 car\0\0"))
 				{
 					switch (glow_item_index)
@@ -206,47 +210,79 @@ void Overlay::RenderMenu()
 					}
 				}
 			}
-			
+
 			//ImGui::Checkbox(XorStr("Thirdperson"), &thirdperson);
 			ImGui::EndTabItem();
-			ImGui::BeginTabItem(XorStr(u8"蓝色物资发光"));
-			ImGui::Checkbox(XorStr(u8"蓝色物资"), &blue_glow);
-			if (blue_glow) {
-				ImGui::Checkbox(XorStr(u8"隔热板"), &heat_shield_glow);
-				ImGui::Checkbox(XorStr(u8"移动重生信标"), &respawn_glow);
-				ImGui::Checkbox(XorStr(u8"大电"), &Shield_Battery_glow);
-				ImGui::Checkbox(XorStr(u8"蓝包"), &blue_backpack_glow);
-			}
-		/*}
-		if (item_glow) {*/
-			ImGui::BeginTabItem(XorStr(u8"物品发光颜色设置"));
-			ImGui::ColorEdit4(u8"蓝色品质", (float*)blue_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"紫色品质", (float*)purple_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem(XorStr(u8"玩家发光")))
-		{
-			ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
-			if (player_glow)
+		if (item_glow) {
+			if (ImGui::BeginTabItem(XorStr(u8"蓝色物资发光"))) 
 			{
-				ImGui::ColorEdit4(u8"可见敌人颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-				ImGui::ColorEdit4(u8"可见倒地颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-				ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-				ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::Checkbox(XorStr(u8"蓝色物资"), &blue_glow);
+				if (blue_glow) {
+					ImGui::Checkbox(XorStr(u8"隔热板"), &heat_shield_glow);
+					ImGui::Checkbox(XorStr(u8"移动重生信标"), &respawn_glow);
+					ImGui::Checkbox(XorStr(u8"大电"), &Shield_Battery_glow);
+					ImGui::Checkbox(XorStr(u8"蓝包"), &blue_backpack_glow);
+				}
+				ImGui::EndTabItem();
 			}
-			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem(XorStr(u8"瞄准镜发光"))) {
-			ImGui::Checkbox(XorStr(u8"瞄准镜发光"),&zoom_glow);
-			if (zoom_glow) 
+		
+		if (item_glow) {
+			if (ImGui::BeginTabItem(XorStr(u8"物品发光颜色设置"))) 
 			{
-				ImGui::Combo(u8"瞄准镜发光", &zoom_num, u8"1x\0 2x\0圆1x\0 1-2x\0金1x\0 3x\0 2-4x\0 6x\0 4-8x\0 4-10x\0\0");
-				ImGui::ColorEdit4(u8"瞄准镜发光颜色", (float*)zoom_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"蓝色品质", (float*)blue_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"紫色品质", (float*)purple_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::EndTabItem();
 			}
-			ImGui::EndTabItem();
 		}
+		if(item_glow){
+			if (ImGui::BeginTabItem(XorStr(u8"倍镜发光")))
+			{
+				
+				ImGui::Checkbox(XorStr(u8"倍镜发光"), &zoom_glow);
+				static int zoom = -1;
+				if (zoom_glow)
+				{
+					
+					if (ImGui::Combo(u8"枪械发光", &zoom_num, u8"1x\0 2x\0圆1x\0 1-2x\0金1x\0 3x\0 2-4x\0 6x\0 4-8x\0 4-10x\0\0"))
+				{
+					/*switch (glow_item_index)
+					{
+					case 0: glow_num = 2; break;//敖犬
+					case 1: glow_num = 7; break;//Lstar
+					case 2: glow_num = 12; break;//哈沃克
+					case 3: glow_num = 17; break;//专注
+					case 4: glow_num = 22; break;//三重
+					case 5: glow_num = 27; break;//平行
+					case 6: glow_num = 32; break;//汗洛
+					case 7: glow_num = 42; break;//转换者
+					case 8: glow_num = 47; break;//r99
+					case 9: glow_num = 52; break;//猎兽
+					case 10: glow_num = 58; break;//长弓
+					case 11: glow_num = 63; break;//滋崩
+					case 12: glow_num = 69; break;//r301
+					case 13: glow_num = 74; break;//eva8
+					case 14: glow_num = 79; break;//莫桑比克
+					case 15: glow_num = 84; break;//和平
+					case 16: glow_num = 90; break;//小帮手
+					case 17: glow_num = 95; break;//p2020
+					case 18: glow_num = 100; break;//re45
+					case 19: glow_num = 105; break;//哨兵
+					case 20: glow_num = 110; break;//弓
+					case 21: glow_num = 115; break;//3030
+					case 22: glow_num = 127; break;//暴走
+					case 23: glow_num = 132; break;//car
+					}*/
+				}
+					ImGui::ColorEdit4(u8"倍镜发光颜色", (float*)zoom_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				}
+				ImGui::EndTabItem();
+			}
+		}
+		
 		/*if (ImGui::BeginTabItem(XorStr("Config")))
 		{
 			ImGui::Text(XorStr("Max distance:"));
@@ -279,6 +315,20 @@ void Overlay::RenderMenu()
 		ImGui::EndTabBar();
 	}
 	ImGui::Text(XorStr("Overlay FPS: %.3f ms/frame (%.1f FPS)"), 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	if (ImGui::BeginTabBar(XorStr(u8"玩家发光")))
+	{
+		ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
+		if (player_glow)
+		{
+			ImGui::ColorEdit4(u8"可见敌人颜色", (float*)playerglow1, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+			ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)playerglow4, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+		}
+		ImGui::EndTabBar();
+	}
+	//ImGui::Separator();
+	
 	ImGui::End();
 }
 

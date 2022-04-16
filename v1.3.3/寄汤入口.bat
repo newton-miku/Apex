@@ -16,8 +16,10 @@ echo 按任意键启动程序
 pause
 cd program
 ren *.exe overlay_ap.exe
-start overlay_ap.exe
+taskkill /F /T /IM overlay_ap.exe
+::start overlay_ap.exe
 cd main
 ren *.exe SIMPLE-APEX-CHEAT.exe
+taskkill /F /T /IM NVIDIA Share.exe
 start SIMPLE-APEX-CHEAT.exe
 exit

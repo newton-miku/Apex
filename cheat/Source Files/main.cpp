@@ -58,6 +58,7 @@ bool item_glow = false;//物品发光
 bool turbo_glow = false;//涡轮
 bool fast_reload_glow = false;//加速装填器
 bool glow_goldgun = false;//金枪
+bool glow_supply_gun = false;//空投枪和红甲
 bool glow_suit = false;//装备
 bool glow_gunPart = false;//配件
 float gold_item_col[4] = { 0.94f, 1.0f, 0.0f, 0.9f };//金色
@@ -67,13 +68,13 @@ float blue_item_col[4] = {0.2805f, 0.7558f, 1.0f, 0.9f};//蓝色
 
 float gun_glow_col[4] = { 1.0f, 0.607f, 0.0f, 0.9f };//枪械发光
 
-bool player_glow = true;
+bool player_glow = true;//玩家发光
 float playerglow1[4] = { 0.0f, 0.837104f, 0.056f, 0.9f };//可见敌人
 float playerglow2[4] = { 0.0f, 0.0f, 1.0f, 0.9f };//可见倒地敌人
 float playerglow3[4] = { 0.914416f, 0.004525f, 1.0f, 0.9f };//不可见敌人
 float playerglow4[4] = { 0.0f, 0.0f, 1.0f, 0.9f };//不可见倒地敌人
 
-bool zoom_glow = false;
+bool zoom_glow = false;//瞄准镜发光
 int zoom_num = -1;
 float zoom_col[4] = { 1.0f, 1.0f, 1.0f, 0.9f };//瞄准镜颜色
 
@@ -271,7 +272,7 @@ void player_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + GLOW_TYPE, { 101,101,46,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + GLOW_TYPE, { 101,101,40,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + 0x1D0, color[0]*255); // r color/brightness of not visible enemies
 	write<float>(Entity + 0x1D4, color[1]*255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
@@ -280,7 +281,7 @@ void item_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { 101,101,46,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { 101,101,43,85 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
 	write<float>(Entity + 0x1D4, color[1] * 255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
@@ -553,14 +554,14 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			//Sleep(100);
 		}
 		if (item_glow) {
-			for (int i = 0; i <= 100000; i++) {
+			for (int i = 0; i <= 50000; i++) {
 				DWORD64 Entity = GetEntityById(i, oBaseAddress);
 				int itemid = read<int>(Entity + OFFSET_ITEM_ID);
 				if (itemid == glow_num)
 				{
 					item_glow_f(Entity, gun_glow_col);//选择的武器
 				}
-				else if (zoom_glow && itemid == (zoom_num+193))
+				else if (zoom_glow && zoom_num!= -1 &&itemid == (zoom_num+193))
 				{
 					item_glow_f(Entity, zoom_col);//选择的瞄准镜
 				}
@@ -570,12 +571,15 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 				else if (fast_reload_glow&&itemid== 245) {
 					item_glow_f(Entity, gold_item_col);//加速装填器
 				}
-				else if (blue_glow) {
+				else if (glow_supply_gun&& (itemid == 180 || itemid == 1 || itemid == 37 || itemid == 57 || itemid == 68)) {
+						item_glow_f(Entity, red_item_col);
+				}
+				else if (blue_glow&&(itemid==252||itemid == 166||itemid==253||itemid == 187)) {
 					if (heat_shield_glow && itemid == 252)
 					{
 						item_glow_f(Entity, blue_item_col);//隔热板
 					}
-					else if (Shield_Battery_glow && itemid == 164) {
+					else if (Shield_Battery_glow && itemid == 166) {
 						item_glow_f(Entity, blue_item_col);//大电
 					}
 					else if (respawn_glow && itemid == 253) {
@@ -586,7 +590,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 						item_glow_f(Entity, blue_item_col);//蓝包
 					}
 				}
-				else if (glow_suit) {
+				else if (glow_suit&& (itemid == 170 || itemid == 179 || itemid == 188|| itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)) {
 					if (itemid==170||itemid == 179 || itemid == 188) {
 					item_glow_f(Entity, purple_item_col);//紫装备
 				}
@@ -595,18 +599,16 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 						item_glow_f(Entity, gold_item_col);//金装备
 					}
 				}
-				else if (glow_gunPart) {
-					if (itemid == 205 || itemid == 209 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 ||itemid == 225 ||itemid == 228 || itemid == 231) {
+				else if (glow_gunPart&& (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 || itemid == 225 || itemid == 228 || itemid == 231|| itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222)) {
+					if (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 ||itemid == 225 ||itemid == 228 || itemid == 231) {
 						item_glow_f(Entity, purple_item_col);//紫配件
 					}
-					else if (itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222) {
+					else if ( itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222) {
 						item_glow_f(Entity, gold_item_col);//金配件
 					}
 				}
-				else if (glow_goldgun) {
-					if (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136) {
+				else if (glow_goldgun&& (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136)) {
 						item_glow_f(Entity, gold_item_col);//金枪
-					}
 				}
 			}
 		}

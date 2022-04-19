@@ -9,6 +9,7 @@
 #include <iostream>
 #include <ctime>
 #include <random>
+#include <thread>
 
 #include "../Tools/xor.hpp"
 #include "../Tools/Tools.h"
@@ -18,9 +19,9 @@
 
 int screenWeight = 1920; // In-game resolution
 int screenHeight = 1080;
-int xFOV = 300; //Aimbot horizontal FOV (square)
-int yFOV = 300; //Aimbot vertical FOV (square)
-int aSmoothAmount = 2; // Aimbot smoothness
+int xFOV = 200; //Aimbot horizontal FOV (square)
+int yFOV = 200; //Aimbot vertical FOV (square)
+int aSmoothAmount = 3; // Aimbot smoothness
 
 uintptr_t localPlayer;
 uintptr_t entList;
@@ -54,8 +55,9 @@ int aim = 0; //read
 bool aim_enable = false;
 bool esp = false; //read
 
-int max_check_glow_item_num = 20000;//物品发光最大遍历数
+int max_check_glow_item_num = 10000;//物品发光最大遍历数
 bool item_glow = false;//物品发光
+bool item_glow_ok = true;//物品发光进程是否完成
 bool turbo_glow = false;//涡轮
 bool fast_reload_glow = false;//加速装填器
 bool glow_goldgun = false;//金枪
@@ -71,9 +73,12 @@ float gun_glow_col[4] = { 1.0f, 0.607f, 0.0f, 0.9f };//枪械发光
 
 int8_t item_main_glow_type = 101;//物品主发光类型
 int8_t item_border_glow_type = 101;//物品发光边界类型
+float item_glow_distance = 200.0f;//物品发光距离
 
 int8_t player_main_glow_type = 101;//玩家发光主类型
 int8_t player_border_glow_type = 101;//玩家发光边界类型
+float player_glow_distance = 500.0f;//玩家发光距离
+float distances = 0;
 
 bool player_glow = true;//玩家发光
 float playerglow1[4] = { 0.0f, 0.837104f, 0.056f, 0.9f };//可见敌人
@@ -103,7 +108,7 @@ bool glow_gun = false;
 int glow_gun_num = -1;
 bool thirdperson = false;
 
-bool valid = true; //write
+bool valid = false; //write
 bool next = true; //read write
 
 uint64_t add[16];
@@ -112,12 +117,38 @@ bool k_f5 = 0;
 bool k_f6 = 0;
 bool k_f8 = 0;
 
+uintptr_t init_main() {
+	while (!hwnd)
+	{
+		hwnd = FindWindowA(NULL, ("Apex Legends"));
+		Sleep(500);
+	}
+
+	while (!oPID) // get the process id
+	{
+		oPID = GetPID("r5apex.exe");
+		Sleep(500);
+	}
+
+	while (!oBaseAddress) // request the module base from driver
+	{
+		oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
+		printf("进程id：%d\n", oPID);
+		printf("基址：%d\n", oBaseAddress);
+		printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
+		Sleep(500);
+	}
+	return oBaseAddress;
+}
+
 bool IsKeyDown(int vk)
 {
 	return (GetAsyncKeyState(vk) & 0x8000) != 0;
 }
 
 player players[100];
+
+
 
 void Overlay::RenderEsp()
 {
@@ -136,9 +167,9 @@ void Overlay::RenderEsp()
 			ImGui::SetNextWindowSize(ImVec2((float)getWidth(), (float)getHeight()));
 			ImGui::Begin(XorStr("##esp"), (bool*)true, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-			for (int i = 0; i < 100; i++)
+			for (int i = 0; i < 64; i++)
 			{
-				if (players[i].health > 0)
+				if (players[i].health > 0 && players[i].dist >0)
 				{
 					std::string distance = std::to_string(players[i].dist / 39.62);
 					distance = distance.substr(0, distance.find('.')) + "m(" + std::to_string(players[i].entity_team) + ")";
@@ -249,13 +280,13 @@ uintptr_t GetEntityBoneArray(uintptr_t ent)
 
 Vector3 GetEntityBonePosition(uintptr_t ent, uint32_t BoneId, Vector3 BasePosition)
 {
-	unsigned long long pBoneArray = GetEntityBoneArray(ent);
+	uintptr_t pBoneArray = GetEntityBoneArray(ent);
 
 	Vector3 EntityHead = Vector3();
 
-	EntityHead.x = read<float>(pBoneArray + 0xCC + (BoneId * 0x30)) + BasePosition.x;
-	EntityHead.y = read<float>(pBoneArray + 0xDC + (BoneId * 0x30)) + BasePosition.y;
-	EntityHead.z = read<float>(pBoneArray + 0xEC + (BoneId * 0x30)) + BasePosition.z;
+	EntityHead.x = read<float>(pBoneArray + 0xCC + (BoneId * 48)) + BasePosition.x;
+	EntityHead.y = read<float>(pBoneArray + 0xDC + (BoneId * 48)) + BasePosition.y;
+	EntityHead.z = read<float>(pBoneArray + 0xEC + (BoneId * 48)) + BasePosition.z;
 
 	return EntityHead;
 }
@@ -265,6 +296,33 @@ Vector3 GetEntityBasePosition(uintptr_t ent)
 	return read<Vector3>(ent + OFFSET_ORIGIN);
 }
 
+void esp_func(DWORD64 Entity, Matrix m, uintptr_t locPlayer, player *players) {
+	float boxThickness = 2;
+
+	Vector3 entHead = GetEntityBonePosition(Entity, 8, GetEntityBasePosition(Entity));
+	Vector3 w2sHead = _WorldToScreen(entHead, m); //if (w2sHead.z <= 0.f) return;
+
+	Vector3 entPos = GetEntityBasePosition(Entity);
+	Vector3 w2sPos = _WorldToScreen(entPos, m); //if (w2sPos.z <= 0.f) return;
+
+	float height = abs(abs(w2sHead.y) - abs(w2sPos.y));
+	float width = height / 2.f;
+	float middle = w2sPos.x - (width / 2.f);
+
+	Vector3 vec = GetEntityBasePosition(locPlayer);
+	players->dist = sqrt(
+		pow(vec.x - entPos.x, 2) +
+		pow(vec.y - entPos.y, 2)
+	);
+
+	players->boxMiddle = middle;
+	players->b_x = w2sPos.x;
+	players->b_y = w2sPos.y;
+	players->h_y = w2sHead.y;// -boxThickness;
+	players->width = width;
+	players->height = height;
+	//return players;
+}
 static bool mouse_move(int x, int y) {
 	INPUT input;
 	input.type = INPUT_MOUSE;
@@ -279,21 +337,110 @@ static bool mouse_move(int x, int y) {
 
 void player_glow_f(DWORD64 Entity, float* color)
 {
-	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
-	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,40,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
-	write<float>(Entity + 0x1D0, color[0]*255); // r color/brightness of not visible enemies
-	write<float>(Entity + 0x1D4, color[1]*255);  // g
-	write<float>(Entity + 0x1D8, color[2] * 255); // b
+	if (player_glow) {
+		write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
+		write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
+		write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,35,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+		write<float>(Entity + GLOW_DISTANCE, player_glow_distance * 3000.0f / 70.0f);//玩家发光距离
+		write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
+		write<float>(Entity + 0x1D4, color[1] * 255);  // g
+		write<float>(Entity + 0x1D8, color[2] * 255); // b
+	}
 }
 void item_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
 	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { item_main_glow_type,item_border_glow_type,43,85 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<float>(Entity + GLOW_DISTANCE, item_glow_distance*3000.0f/70.0f);//物品发光距离
+	//distances = read<float>(Entity + GLOW_DISTANCE);
+	//printf("itemid = %d, dis = %.2f\n",itemid, item_glow_distance);
 	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
 	write<float>(Entity + 0x1D4, color[1] * 255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
+}
+void item_glow_func(uintptr_t oBaseAddress) {
+	item_glow_ok = false;
+	for (int i = 0; i <= max_check_glow_item_num; i++) {
+		DWORD64 Entity = GetEntityById(i, oBaseAddress);
+		int itemid = read<int>(Entity + OFFSET_ITEM_ID);
+		if (glow_gun && itemid == glow_gun_num)
+		{
+			item_glow_f(Entity, gun_glow_col);//选择的武器
+		}
+		else if (zoom_glow && zoom_num != -1 && itemid == (zoom_num + 193))
+		{
+			item_glow_f(Entity, zoom_col);//选择的瞄准镜
+		}
+		else if (turbo_glow && itemid == 232) {
+			item_glow_f(Entity, gold_item_col);//涡轮
+		}
+		else if (fast_reload_glow && itemid == 245) {
+			item_glow_f(Entity, gold_item_col);//加速装填器
+		}
+		else if (glow_supply_gun && (itemid == 180 || itemid == 1 || itemid == 37 || itemid == 57 || itemid == 68)) {
+			item_glow_f(Entity, red_item_col);//空投枪和红甲
+		}
+		else if (blue_glow && (itemid == 252 || itemid == 166 || itemid == 253 || itemid == 187)) {
+			if (heat_shield_glow && itemid == 252)
+			{
+				item_glow_f(Entity, blue_item_col);//隔热板
+			}
+			else if (Shield_Battery_glow && itemid == 166) {
+				item_glow_f(Entity, blue_item_col);//大电
+			}
+			else if (respawn_glow && itemid == 253) {
+				item_glow_f(Entity, blue_item_col);//重生信标
+			}
+			else if (blue_backpack_glow && itemid == 187)
+			{
+				item_glow_f(Entity, blue_item_col);//蓝包
+			}
+		}
+		else if (glow_suit && (itemid == 170 || itemid == 179 || itemid == 188 || itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)) {
+			if (itemid == 170 || itemid == 179 || itemid == 188) {
+				item_glow_f(Entity, purple_item_col);//紫装备
+			}
+			else if (itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)
+			{
+				item_glow_f(Entity, gold_item_col);//金装备
+			}
+		}
+		else if (glow_gunPart && (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 || itemid == 225 || itemid == 228 || itemid == 231 || itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222)) {
+			if (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 || itemid == 225 || itemid == 228 || itemid == 231) {
+				item_glow_f(Entity, purple_item_col);//紫配件
+			}
+			else if (itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222) {
+				item_glow_f(Entity, gold_item_col);//金配件
+			}
+		}
+		else if (glow_goldgun && (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136)) {
+			item_glow_f(Entity, gold_item_col);//金枪
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
+	item_glow_ok = true;
+};
+void aim_func(int aX,int aY) {
+	// After entity loop ends
+	if (closestX != 9999 && closestY != 9999)
+	{
+		//	 If aimbot key pressed
+		if (GetAsyncKeyState(VK_LBUTTON) || GetAsyncKeyState(VK_RBUTTON))
+		{
+			//		 If mouse cursor shown
+			CURSORINFO ci = { sizeof(CURSORINFO) };
+			if (GetCursorInfo(&ci))
+			{
+				if (ci.flags == 0) {
+					aX = (closestX - crosshairX) / aSmoothAmount;
+					aY = (closestY - crosshairY) / aSmoothAmount;
+				}
+				//mouse_move((int)aX, (int)(aY));
+				mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
+			}
+		}
+	}
 }
 
 int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
@@ -324,20 +471,38 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		ready = true;
 		printf(XorStr("Ready\n"));
 	}
+	printf("按F4即可正常关闭软件\n");
+	printf("按F5开关ESP\n");
+	printf("按F6可开关敌人发光\n");
+	printf("按F7可开关物品发光\n");
+	printf("按F8开关自瞄\n");
+	
+	
 	while (active)
 	{
+		int j = 0;
 		if (IsKeyDown(VK_F4))
 		{
 			active = false;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//printf("%f\t%f\t%f\n", col2[0], col2[1], col2[2]);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		if (IsKeyDown(VK_F4))
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		/*if (IsKeyDown(VK_F4))
 		{
 			active = false;
+		}*/
+		if (IsKeyDown(VK_F6))
+		{
+			player_glow = !player_glow;
+			Sleep(300);
 		}
-		/*if (IsKeyDown(VK_F5) && k_f5 == 0)
+		if (IsKeyDown(VK_F7))
+		{
+			item_glow = !item_glow;
+			Sleep(300);
+		}
+		if (IsKeyDown(VK_F5) && k_f5 == 0)
 		{
 			k_f5 = 1;
 			esp = !esp;
@@ -346,8 +511,12 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		{
 			k_f5 = 0;
 		}
+		if (IsKeyDown(VK_F8))
+		{
+			aim_enable = !aim_enable;
+		}
 
-		if (IsKeyDown(VK_F6) && k_f6 == 0)
+		/*if (IsKeyDown(VK_F6) && k_f6 == 0)
 		{
 			k_f6 = 1;
 			switch (aim)
@@ -398,7 +567,20 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			aiming = true;
 		else
 			aiming = false;*/
-		if (player_glow)
+		if (item_glow && item_glow_ok)
+		{
+			std::thread item_th(item_glow_func, oBaseAddress);//,std::ref(item_glow_ok));
+			item_glow_ok = false;
+			if (item_th.joinable()) 
+			{
+				item_th.detach();
+				
+			}
+		}
+		//std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		//std::thread esp(&Overlay::RenderEsp);
+		//esp.detach();
+		if (player_glow || esp)
 		{
 			// Matrix set up
 			uint64_t viewRenderer = read<uint64_t>(oBaseAddress + OFFSET_RENDER);
@@ -413,6 +595,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			int closestY = 9999;
 
 			// Entity loop starts here
+			j = 0;
 			for (int i = 0; i < 64; i++)
 			{
 				DWORD64 Entity = GetEntityById(i, oBaseAddress);
@@ -421,10 +604,15 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 				DWORD64 EntityHandle = read<DWORD64>(Entity + OFFSET_NAME);
 				std::string Identifier = read<std::string>(EntityHandle);
 				LPCSTR IdentifierC = Identifier.c_str();
+				
+
+				valid = false; next = false;
 				if (strcmp(IdentifierC, "player"))
 				{
-
+					strcpy(players[j].name, Identifier.c_str());
+					//printf("%s\n", players[i].name);
 					Vector3 HeadPosition = GetEntityBonePosition(Entity, 8, GetEntityBasePosition(Entity));
+
 					// Convert to screen position
 
 					Vector3 w2sHeadAimPos = _WorldToScreen(HeadPosition, m);
@@ -444,39 +632,31 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 
 					// Get entity team ID
 					int entTeamID = read<int>(Entity + OFFSET_TEAM);
-					players[i].entity_team = entTeamID;
+					players[j].entity_team = entTeamID;
+
 					//Get player health
 					float health = read<int>(Entity + OFFSET_HEALTH);
-					players[i].health = health;
+					players[j].health = health;
 
 					//Get player shield
 					float shield = read<int>(Entity + OFFSET_SHIELD);
-					players[i].shield = shield;
+					players[j].shield = shield;
 
 					// Is it an enemy
 					if (entTeamID != playerTeamID)
 					{
+						esp_func(Entity, m, locPlayer, &players[j]);
 						/*
 						write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 						write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
 						write<GlowMode>(Entity + GLOW_TYPE, { 101,101,46,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 						*/
-						/*std::wstring health1 = std::to_wstring(health);
-						health1 = L"血：" + health1.substr(0, health1.find('.'));
-
-						std::wstring shield1 = std::to_wstring(shield);
-						shield1 = L"护甲：" + shield1.substr(0, shield1.find('.'));
-						*/
-						//dx.Fill(hs.x - 2.5f, hs.y, 5, 5, 0, 0, 255, 255); //HEAD
-						//dx.DrawBox2(boxMiddle, hs.y, width, height, 255, 0, 0, 255); //BOX
-						//dx.DrawString(HeadPosition.x, HeadPosition.y + 1, 255, 0, 255, 0, health1.c_str());  //Health
-						//dx.DrawString(HeadPosition.x, HeadPosition.y + 2, 255, 0, 255, 0, shield1.c_str());  //Health
-						//dx.DrawLine(ov->getWidth() / 2, ov->getHeight(), bs.x, bs.y, 255, 0, 0, 255); //LINE FROM MIDDLE SCREEN
 
 						// Is visible
 						if (entNewVisTime != entOldVisTime[i])
 						{
 							visCooldownTime[i] = 0; // low values mean less latency, increase if you observe the color changes on visible enemies
+							players[j].visible = true;
 
 							//visible enemie color
 							if (entKnockedState == 0)
@@ -487,7 +667,9 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 								write<float>(Entity + 0x1D8, 0); // blue
 								*/
 								player_glow_f(Entity, playerglow1);
+								players[j].knocked = false;
 								// Aimbot fov
+								yFOV = xFOV;
 								if (abs(crosshairX - entX) < abs(crosshairX - closestX) && abs(crosshairX - entX) < xFOV && abs(crosshairY - entY) < abs(crosshairY - closestY) && abs(crosshairY - entY) < yFOV)
 								{
 									// Aimbot find closest target
@@ -504,6 +686,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 								write<float>(Entity + 0x1D8, 255); // b
 								*/
 								player_glow_f(Entity, playerglow2);
+								players[j].knocked = true;
 							}
 
 							entOldVisTime[i] = entNewVisTime;
@@ -512,6 +695,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 						{
 							if (visCooldownTime[i] <= 0)
 							{
+								players[j].visible = false;
 								//unvisible enemie color
 								if (entKnockedState == 0)
 								{
@@ -521,6 +705,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 									write<float>(Entity + 0x1D8, 0); // b
 									*/
 									player_glow_f(Entity, playerglow3);
+									players[j].knocked = false;
 								}
 								else
 								{
@@ -531,14 +716,19 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 									write<float>(Entity + 0x1D8, 255); // b
 									*/
 									player_glow_f(Entity, playerglow4);
+									players[j].knocked = true;
 								}
 							}
 						}
 
 						if (visCooldownTime[i] >= 0) visCooldownTime[i] -= 1;
 					}
+					valid = true;
+					j++;
 				}
 			}
+			next = true;
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			if (aim_enable) {
 				// After entity loop ends
 				if (closestX != 9999 && closestY != 9999)
@@ -554,73 +744,82 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 								aX = (closestX - crosshairX) / aSmoothAmount;
 								aY = (closestY - crosshairY) / aSmoothAmount;
 							}
-							mouse_move((int)aX, (int)(aY));
-							//mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
+							//mouse_move((int)aX, (int)(aY));
+							mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
 						}
 					}
 				}
+				//aim_func(aX, aY);
 			}
 			//Sleep(100);
 		}
-		if (item_glow) {
-			for (int i = 0; i <= max_check_glow_item_num; i++) {
-				DWORD64 Entity = GetEntityById(i, oBaseAddress);
-				int itemid = read<int>(Entity + OFFSET_ITEM_ID);
-				if (glow_gun && itemid == glow_gun_num)
+		
+		/*if (item_glow) {
+			//for (int i = 0; i <= max_check_glow_item_num; i++) {
+			//	DWORD64 Entity = GetEntityById(i, oBaseAddress);
+			//	int itemid = read<int>(Entity + OFFSET_ITEM_ID);
+			//	if (glow_gun && itemid == glow_gun_num)
+			//	{
+			//		item_glow_f(Entity, gun_glow_col);//选择的武器
+			//	}
+			//	else if (zoom_glow && zoom_num!= -1 &&itemid == (zoom_num+193))
+			//	{
+			//		item_glow_f(Entity, zoom_col);//选择的瞄准镜
+			//	}
+			//	else if(turbo_glow&& itemid == 232){
+			//		item_glow_f(Entity, gold_item_col);//涡轮
+			//	}
+			//	else if (fast_reload_glow&&itemid== 245) {
+			//		item_glow_f(Entity, gold_item_col);//加速装填器
+			//	}
+			//	else if (glow_supply_gun&& (itemid == 180 || itemid == 1 || itemid == 37 || itemid == 57 || itemid == 68)) {
+			//			item_glow_f(Entity, red_item_col);//空投枪和红甲
+			//	}
+			//	else if (blue_glow&&(itemid==252||itemid == 166||itemid==253||itemid == 187)) {
+			//		if (heat_shield_glow && itemid == 252)
+			//		{
+			//			item_glow_f(Entity, blue_item_col);//隔热板
+			//		}
+			//		else if (Shield_Battery_glow && itemid == 166) {
+			//			item_glow_f(Entity, blue_item_col);//大电
+			//		}
+			//		else if (respawn_glow && itemid == 253) {
+			//			item_glow_f(Entity, blue_item_col);//重生信标
+			//		}
+			//		else if (blue_backpack_glow && itemid == 187)
+			//		{
+			//			item_glow_f(Entity, blue_item_col);//蓝包
+			//		}
+			//	}
+			//	else if (glow_suit&& (itemid == 170 || itemid == 179 || itemid == 188|| itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)) {
+			//		if (itemid==170||itemid == 179 || itemid == 188) {
+			//		item_glow_f(Entity, purple_item_col);//紫装备
+			//	}
+			//		else if (itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)
+			//		{
+			//			item_glow_f(Entity, gold_item_col);//金装备
+			//		}
+			//	}
+			//	else if (glow_gunPart&& (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 || itemid == 225 || itemid == 228 || itemid == 231|| itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222)) {
+			//		if (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 ||itemid == 225 ||itemid == 228 || itemid == 231) {
+			//			item_glow_f(Entity, purple_item_col);//紫配件
+			//		}
+			//		else if ( itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222) {
+			//			item_glow_f(Entity, gold_item_col);//金配件
+			//		}
+			//	}
+			//	else if (glow_goldgun&& (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136)) {
+			//			item_glow_f(Entity, gold_item_col);//金枪
+			//	}
+			//}
+			//if (item_glow_th.joinable()) {
+				std::thread item_glow_th(item_glow_func, oBaseAddress);
+				if (item_glow_th.joinable())
 				{
-					item_glow_f(Entity, gun_glow_col);//选择的武器
+					item_glow_th.detach();
 				}
-				else if (zoom_glow && zoom_num!= -1 &&itemid == (zoom_num+193))
-				{
-					item_glow_f(Entity, zoom_col);//选择的瞄准镜
-				}
-				else if(turbo_glow&& itemid == 232){
-					item_glow_f(Entity, gold_item_col);//涡轮
-				}
-				else if (fast_reload_glow&&itemid== 245) {
-					item_glow_f(Entity, gold_item_col);//加速装填器
-				}
-				else if (glow_supply_gun&& (itemid == 180 || itemid == 1 || itemid == 37 || itemid == 57 || itemid == 68)) {
-						item_glow_f(Entity, red_item_col);
-				}
-				else if (blue_glow&&(itemid==252||itemid == 166||itemid==253||itemid == 187)) {
-					if (heat_shield_glow && itemid == 252)
-					{
-						item_glow_f(Entity, blue_item_col);//隔热板
-					}
-					else if (Shield_Battery_glow && itemid == 166) {
-						item_glow_f(Entity, blue_item_col);//大电
-					}
-					else if (respawn_glow && itemid == 253) {
-						item_glow_f(Entity, blue_item_col);//重生信标
-					}
-					else if (blue_backpack_glow && itemid == 187)
-					{
-						item_glow_f(Entity, blue_item_col);//蓝包
-					}
-				}
-				else if (glow_suit&& (itemid == 170 || itemid == 179 || itemid == 188|| itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)) {
-					if (itemid==170||itemid == 179 || itemid == 188) {
-					item_glow_f(Entity, purple_item_col);//紫装备
-				}
-					else if (itemid == 171 || itemid == 175 || itemid == 185 || itemid == 189)
-					{
-						item_glow_f(Entity, gold_item_col);//金装备
-					}
-				}
-				else if (glow_gunPart&& (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 || itemid == 225 || itemid == 228 || itemid == 231|| itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222)) {
-					if (itemid == 205 || itemid == 209 || itemid == 213 || itemid == 217 || itemid == 221 ||itemid == 225 ||itemid == 228 || itemid == 231) {
-						item_glow_f(Entity, purple_item_col);//紫配件
-					}
-					else if ( itemid == 202 || itemid == 210 || itemid == 214 || itemid == 218 || itemid == 222) {
-						item_glow_f(Entity, gold_item_col);//金配件
-					}
-				}
-				else if (glow_goldgun&& (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136)) {
-						item_glow_f(Entity, gold_item_col);//金枪
-				}
-			}
-		}
+			//}
+		}*/
 	}
 	ready = false;
 	ov1.Clear();
@@ -635,27 +834,29 @@ int main(int argCount, char** argVector)
 	srand(time(NULL));
 	std::string filePath = argVector[0];
 	RenameFile(filePath);
+	
+	oBaseAddress = init_main();
+	g_Base = oBaseAddress;
+	//while (!hwnd)
+	//{
+	//	hwnd = FindWindowA(NULL, ("Apex Legends"));
+	//	Sleep(500);
+	//}
 
-	while (!hwnd)
-	{
-		hwnd = FindWindowA(NULL, ("Apex Legends"));
-		Sleep(500);
-	}
+	//while (!oPID) // get the process id
+	//{
+	//	oPID = GetPID("r5apex.exe");
+	//	Sleep(500);
+	//}
 
-	while (!oPID) // get the process id
-	{
-		oPID = GetPID("r5apex.exe");
-		Sleep(500);
-	}
-
-	while (!oBaseAddress) // request the module base from driver
-	{
-		oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
-		printf("进程id：%d\n",oPID);
-		printf("基址：%d\n", oBaseAddress);
-		printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
-		Sleep(500);
-	}
+	//while (!oBaseAddress) // request the module base from driver
+	//{
+	//	oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
+	//	printf("进程id：%d\n",oPID);
+	//	printf("基址：%d\n", oBaseAddress);
+	//	printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
+	//	Sleep(500);
+	//}
 	while (active) {
 		gui(oBaseAddress);
 	}

@@ -5,9 +5,6 @@ extern int aim;
 extern bool aim_enable;
 extern bool esp;
 
-extern int aSmoothAmount; // Aimbot smoothness
-extern int xFOV; //Aimbot horizontal FOV (square)
-extern int yFOV; //Aimbot vertical FOV (square)
 
 extern bool player_glow;
 extern float playerglow1[4];
@@ -33,11 +30,9 @@ extern float blue_item_col[4];
 
 extern int8_t item_main_glow_type;
 extern int8_t item_border_glow_type;
-extern float item_glow_distance;
 
 extern int8_t player_main_glow_type;
 extern int8_t player_border_glow_type;
-extern float player_glow_distance;
 
 extern bool zoom_glow;
 extern int zoom_num;
@@ -131,7 +126,7 @@ void Overlay::RenderMenu()
 	static bool spec_disable = false;
 	static bool all_spec_disable = false;
 
-	/*if (aim > 0)
+	if (aim > 0)
 	{
 		aim_enable = true;
 		if (aim > 1)
@@ -147,7 +142,7 @@ void Overlay::RenderMenu()
 	{
 		aim_enable = false;
 		vis_check = false;
-	}*/
+	}
 	static ImGuiColorEditFlags alpha_flags = 0;
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(ImVec2(700, 500));
@@ -156,10 +151,11 @@ void Overlay::RenderMenu()
 	{
 		if (ImGui::BeginTabItem(XorStr(u8"物品发光")))
 		{
-			ImGui::Checkbox(XorStr("ESP"), &esp);
+			/*ImGui::Checkbox(XorStr("ESP"), &esp);
 
+			ImGui::Checkbox(XorStr("AIM"), &aim_enable);
 
-			/*if (aim_enable)
+			if (aim_enable)
 			{
 				ImGui::SameLine();
 				ImGui::Checkbox(XorStr("Visibility check"), &vis_check);
@@ -185,7 +181,7 @@ void Overlay::RenderMenu()
 			
 			if (item_glow)
 			{
-				ImGui::Checkbox(XorStr(u8"空投枪和红甲"), &glow_supply_gun);
+				ImGui::Checkbox(XorStr(u8"空投枪"), &glow_supply_gun);
 				ImGui::Checkbox(XorStr(u8"金枪"), &glow_goldgun);
 				ImGui::Checkbox(XorStr(u8"涡轮"), &turbo_glow);
 				ImGui::Checkbox(XorStr(u8"加速装填器"), &fast_reload_glow);
@@ -249,18 +245,14 @@ void Overlay::RenderMenu()
 			{
 				ImGui::Text(XorStr(u8"最大检测数目")); 
 				ImGui::SameLine();
-				HelpMarker(u8"将该值调低可能会影响物品发光检测范围，甚至可能检测不到\n但较低的值可降低检测敌人延迟");
-				ImGui::SliderInt(XorStr("##3"), &max_check_glow_item_num, 1000, 100000, "%d");
+				//HelpMarker(u8"将该值调低可能会影响物品发光检测范围，甚至可能检测不到\n但较低的值可降低检测敌人延迟");
+				ImGui::SliderInt(XorStr("##3"), &max_check_glow_item_num, 5000, 50000, "%d");
 				static int main_glow1 = -1;
 				static int border_glow1 = -1;
 				ImGui::ColorEdit4(u8"蓝色品质", (float*)blue_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"紫色品质", (float*)purple_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-				ImGui::Text(XorStr(u8"发光距离")); ImGui::SameLine();
-				HelpMarker(u8"可调整范围为0-800m,ctrl+鼠标单击即可输入值");
-				//ImGui::SliderFloat(XorStr("#dis"), &item_glow_distance, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
-				ImGui::DragFloat(XorStr("#dis"), &item_glow_distance, 50.0f, 0.0f, 800.0f, "%.0fm");
 				ImGui::Text(u8"物品发光类型设置");
 				if (ImGui::Combo(u8"总发光类型", &main_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
 				{
@@ -301,18 +293,18 @@ void Overlay::RenderMenu()
 			}
 		}
 		
-		if (ImGui::BeginTabItem(XorStr("Config")))
+		/*if (ImGui::BeginTabItem(XorStr("Config")))
 		{
-			/*ImGui::Text(XorStr("Max distance:"));
+			ImGui::Text(XorStr("Max distance:"));
 			ImGui::SliderFloat(XorStr("##1"), &max_dist, 100.0f * 40, 800.0f * 40, "%.2f");
 			ImGui::SameLine();
-			ImGui::Text("(%d meters)", (int)(max_dist / 40));*/
+			ImGui::Text("(%d meters)", (int)(max_dist / 40));
 
 			ImGui::Text(XorStr("Smooth aim value:"));
-			ImGui::SliderInt(XorStr("##2"), &aSmoothAmount, 3, 10, "%d");
+			ImGui::SliderFloat(XorStr("##2"), &smooth, 12.0f, 150.0f, "%.2f");
 
-			/*ImGui::Text(XorStr("Max FOV:"));
-			ImGui::SliderFloat(XorStr("##3"), &max_fov, 5.0f, 250.0f, "%.2f");*/
+			ImGui::Text(XorStr("Max FOV:"));
+			ImGui::SliderFloat(XorStr("##3"), &max_fov, 5.0f, 250.0f, "%.2f");
 
 			ImGui::Text(XorStr("Aim at (bone id):"));
 			ImGui::SliderInt(XorStr("##4"), &bone, 0, 175);
@@ -329,7 +321,7 @@ void Overlay::RenderMenu()
 			ImGui::Checkbox(XorStr("Health bar"), &v.healthbar);
 			ImGui::Checkbox(XorStr("Shield bar"), &v.shieldbar);
 			ImGui::EndTabItem();
-		}
+		}*/
 		ImGui::EndTabBar();
 	}
 	ImGui::Text(XorStr("Overlay FPS: %.3f ms/frame (%.1f FPS)"), 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -340,21 +332,10 @@ void Overlay::RenderMenu()
 		ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
 		if (player_glow)
 		{
-			ImGui::Checkbox(XorStr("AIM"), &aim_enable);
-			if (aim_enable)
-			{
-				ImGui::Text(XorStr(u8"自瞄检测窗口大小"));
-				ImGui::SameLine(); HelpMarker(u8"可调整范围为50-300");
-				ImGui::DragInt(XorStr("FOV"), &xFOV, 20, 50, 300, "%d px");
-			}
 			ImGui::ColorEdit4(u8"可见敌人颜色", (float*)playerglow1, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)playerglow4, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::Text(XorStr(u8"发光距离")); 
-			ImGui::SameLine();HelpMarker(u8"可调整范围为0-10000m,ctrl+鼠标单击即可输入值");
-			//ImGui::SliderFloat(XorStr("#dis"), &player_glow_distance, 0.0f, 10000.0f, "%.0fm");
-			ImGui::DragFloat(XorStr("#dis"), &player_glow_distance, 100.0f, 0.0f, 10000.0f, "%.0fm");
 			if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
 			{
 				switch (main_glow2)
@@ -631,12 +612,12 @@ void Overlay::DrawLine(ImVec2 a, ImVec2 b, ImColor color, float width)
 	ImGui::GetWindowDrawList()->AddLine(a, b, color, width);
 }
 
-void Overlay::DrawBox(ImColor color, float x, float y, float w, float h)//input the position of left bottom corner position
+void Overlay::DrawBox(ImColor color, float x, float y, float w, float h)
 {
-	DrawLine(ImVec2(x, y), ImVec2(x + w, y), color, 1.0f);//bottom
-	DrawLine(ImVec2(x, y), ImVec2(x, y + h), color, 1.0f);//left
-	DrawLine(ImVec2(x + w, y), ImVec2(x + w, y + h), color, 1.0f);//right
-	DrawLine(ImVec2(x, y + h), ImVec2(x + w, y + h), color, 1.0f);//top
+	DrawLine(ImVec2(x, y), ImVec2(x + w, y), color, 1.0f);
+	DrawLine(ImVec2(x, y), ImVec2(x, y + h), color, 1.0f);
+	DrawLine(ImVec2(x + w, y), ImVec2(x + w, y + h), color, 1.0f);
+	DrawLine(ImVec2(x, y + h), ImVec2(x + w, y + h), color, 1.0f);
 }
 
 void Overlay::Text(ImVec2 pos, ImColor color, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)

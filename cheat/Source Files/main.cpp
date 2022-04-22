@@ -19,8 +19,8 @@
 
 int screenWeight = 1920; // In-game resolution
 int screenHeight = 1080;
-int xFOV = 200; //Aimbot horizontal FOV (square)
-int yFOV = 200; //Aimbot vertical FOV (square)
+int xFOV = 50; //Aimbot horizontal FOV (square)
+int yFOV = 50; //Aimbot vertical FOV (square)
 int aSmoothAmount = 3; // Aimbot smoothness
 
 uintptr_t localPlayer;
@@ -41,12 +41,12 @@ typedef struct player
 	bool visible = false;
 	int health = 0;
 	int shield = 0;
-	char name[33] = { 0 };
+	char name[32] = { 0 };
 }player;
 
 uint32_t check = 0xABCD;
 
-int aim_key = VK_RBUTTON;
+int aim_key = 0;
 bool use_nvidia = true;
 bool active = true;
 bool ready = false;
@@ -102,7 +102,7 @@ uint64_t g_Base = 0; //write
 float max_dist = 200.0f * 40.0f; //read
 float smooth = 12.0f;
 float max_fov = 15.0f;
-int bone = 2;
+int bone = 7;
 
 bool glow_gun = false;
 int glow_gun_num = -1;
@@ -169,7 +169,7 @@ void Overlay::RenderEsp()
 
 			for (int i = 0; i < 64; i++)
 			{
-				if (players[i].health > 0 && players[i].dist > 0)
+				if (players[i].health > 0 && players[i].dist > 1)
 				{
 					std::string distance = std::to_string(players[i].dist / 39.62);
 					distance = distance.substr(0, distance.find('.')) + "m(" + std::to_string(players[i].entity_team) + ")";
@@ -200,12 +200,12 @@ void Overlay::RenderEsp()
 					}
 
 					if (v.healthbar)
-						ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 3, players[i].height, players[i].health, 100); //health bar
+						ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 5, players[i].height, players[i].health, 100); //health bar
 					if (v.shieldbar)
-						ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 3, players[i].height, players[i].shield, 125); //shield bar
+						ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 5, players[i].height, players[i].shield, 125); //shield bar
 
 					if (v.name)
-						String(ImVec2(players[i].boxMiddle, (players[i].b_y - players[i].height - 15)), WHITE, players[i].name);
+						String(ImVec2(players[i].boxMiddle, (players[i].b_y + players[i].height/* + 15*/)), WHITE, players[i].name);
 				}
 			}
 
@@ -278,15 +278,15 @@ uintptr_t GetEntityBoneArray(uintptr_t ent)
 	return read<uintptr_t>(ent + OFFSET_BONES);
 }
 
-Vector3 GetEntityBonePosition(uintptr_t ent, uint32_t BoneId, Vector3 BasePosition)
+Vector3 GetEntityBonePosition(uintptr_t ent, int BoneId, Vector3 BasePosition)
 {
 	uintptr_t pBoneArray = GetEntityBoneArray(ent);
 
 	Vector3 EntityHead = Vector3();
 
-	EntityHead.x = read<float>(pBoneArray + 0xCC + (BoneId * 48)) + BasePosition.x;
-	EntityHead.y = read<float>(pBoneArray + 0xDC + (BoneId * 48)) + BasePosition.y;
-	EntityHead.z = read<float>(pBoneArray + 0xEC + (BoneId * 48)) + BasePosition.z;
+	EntityHead.x = read<float>(pBoneArray + 0xCC + (BoneId * 0x30)) + BasePosition.x;//8-head
+	EntityHead.y = read<float>(pBoneArray + 0xDC + (BoneId * 0x30)) + BasePosition.y;
+	EntityHead.z = read<float>(pBoneArray + 0xEC + (BoneId * 0x30)) + BasePosition.z;
 
 	return EntityHead;
 }
@@ -346,6 +346,13 @@ void player_glow_f(DWORD64 Entity, float* color)
 		write<float>(Entity + 0x1D4, color[1] * 255);  // g
 		write<float>(Entity + 0x1D8, color[2] * 255); // b
 	}
+}
+void get_name(DWORD64 Entity, uint64_t index, char* name)
+{
+	index *= 0x10;
+	DWORD64 name_ptr = 0;
+	name_ptr = read<DWORD64>(Entity + OFFSET_NAME_LIST + index);
+	name = read<char*>(name_ptr);
 }
 void item_glow_f(DWORD64 Entity, float* color)
 {
@@ -417,16 +424,27 @@ void item_glow_func(uintptr_t oBaseAddress) {
 		else if (glow_goldgun && (itemid == 6 || itemid == 11 || itemid == 21 || itemid == 26 || itemid == 31 || itemid == 36 || itemid == 46 || itemid == 51 || itemid == 56 || itemid == 62 || itemid == 67 || itemid == 73 || itemid == 78 || itemid == 83 || itemid == 88 || itemid == 94 || itemid == 99 || itemid == 104 || itemid == 109 || itemid == 114 || itemid == 119 || itemid == 131 || itemid == 136)) {
 			item_glow_f(Entity, gold_item_col);//½ðÇ¹
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	item_glow_ok = true;
 };
+bool aim_key_on() {
+	bool enable = false;
+	switch (aim_key)
+	{
+	case 0: enable = (GetAsyncKeyState(VK_LBUTTON) || GetAsyncKeyState(VK_RBUTTON)); break;//Êó±ê×óÓÒ¼ü
+	case 1: enable = GetAsyncKeyState(VK_LBUTTON); break;//Êó±ê×ó¼ü
+	case 2: enable = GetAsyncKeyState(VK_RBUTTON); break;//Êó±êÓÒ¼ü
+	case 3: enable = GetAsyncKeyState(VK_RMENU); break;//¼üÅÌÓÒAlt
+	}
+	return enable;
+}
 void aim_func(int aX, int aY) {
 	// After entity loop ends
 	if (closestX != 9999 && closestY != 9999)
 	{
 		//	 If aimbot key pressed
-		if (GetAsyncKeyState(VK_LBUTTON) || GetAsyncKeyState(VK_RBUTTON))
+		if (aim_key_on())
 		{
 			//		 If mouse cursor shown
 			CURSORINFO ci = { sizeof(CURSORINFO) };
@@ -436,8 +454,9 @@ void aim_func(int aX, int aY) {
 					aX = (closestX - crosshairX) / aSmoothAmount;
 					aY = (closestY - crosshairY) / aSmoothAmount;
 				}
-				//mouse_move((int)aX, (int)(aY));
-				mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
+				//printf("%d\t%d\n", aX,aY);
+				mouse_move((int)aX, (int)(aY));
+				//mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
 			}
 		}
 	}
@@ -513,7 +532,11 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		}
 		if (IsKeyDown(VK_F8))
 		{
-			aim_enable = !aim_enable;
+			aim_enable = true;
+		}
+		if (IsKeyDown(VK_F9))
+		{
+			aim_enable = false;
 		}
 
 		/*if (IsKeyDown(VK_F6) && k_f6 == 0)
@@ -609,9 +632,10 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 				valid = false; next = false;
 				if (strcmp(IdentifierC, "player"))
 				{
-					strcpy(players[j].name, Identifier.c_str());
+					//strcpy(players[j].name, Identifier.c_str());
+					get_name(Entity, j, players[j].name);
 					//printf("%s\n", players[i].name);
-					Vector3 HeadPosition = GetEntityBonePosition(Entity, 8, GetEntityBasePosition(Entity));
+					Vector3 HeadPosition = GetEntityBonePosition(Entity, bone, GetEntityBasePosition(Entity));
 
 					// Convert to screen position
 
@@ -729,14 +753,17 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			}
 			next = true;
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			if (aim_enable) {
+			if (aim_enable)
+				aim_func(aX, aY);
+			/* {
 				// After entity loop ends
 				if (closestX != 9999 && closestY != 9999)
 				{
 					//	 If aimbot key pressed
-					if (GetAsyncKeyState(VK_LBUTTON) || GetAsyncKeyState(VK_RBUTTON))
+					if (aim_key_on())
 					{
 						//		 If mouse cursor shown
+						
 						CURSORINFO ci = { sizeof(CURSORINFO) };
 						if (GetCursorInfo(&ci))
 						{
@@ -744,13 +771,13 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 								aX = (closestX - crosshairX) / aSmoothAmount;
 								aY = (closestY - crosshairY) / aSmoothAmount;
 							}
-							//mouse_move((int)aX, (int)(aY));
-							mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
+							//printf("%d\t%d\n", aX,aY);
+							mouse_move((int)aX, (int)(aY));
+							//mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
 						}
 					}
 				}
-				//aim_func(aX, aY);
-			}
+			}*/
 			//Sleep(100);
 		}
 

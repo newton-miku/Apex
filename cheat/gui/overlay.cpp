@@ -3,6 +3,7 @@ using namespace std;
 
 extern int aim;
 extern bool aim_enable;
+extern int aim_key;
 extern bool esp;
 
 extern int aSmoothAmount; // Aimbot smoothness
@@ -308,14 +309,14 @@ void Overlay::RenderMenu()
 			ImGui::SameLine();
 			ImGui::Text("(%d meters)", (int)(max_dist / 40));*/
 
-			ImGui::Text(XorStr("Smooth aim value:"));
-			ImGui::SliderInt(XorStr("##2"), &aSmoothAmount, 3, 10, "%d");
+			ImGui::Text(XorStr(u8"自瞄平滑度"));
+			ImGui::SliderInt(XorStr("##2"), &aSmoothAmount, 1, 40, "%d");
 
 			/*ImGui::Text(XorStr("Max FOV:"));
 			ImGui::SliderFloat(XorStr("##3"), &max_fov, 5.0f, 250.0f, "%.2f");*/
-
-			ImGui::Text(XorStr("Aim at (bone id):"));
-			ImGui::SliderInt(XorStr("##4"), &bone, 0, 175);
+			ImGui::Combo(u8"自瞄键", &aim_key, u8"鼠标左右键\0鼠标左键\0鼠标右键\0键盘右Alt\0\0");
+			ImGui::Text(XorStr(u8"Aim at (bone id):"));
+			ImGui::SliderInt(XorStr("##4"), &bone, 1, 20,"%d");
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem(XorStr("Visuals")))
@@ -338,15 +339,15 @@ void Overlay::RenderMenu()
 		static int main_glow2 = -1;
 		static int border_glow2 = -1;
 		ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
-		if (player_glow)
+		ImGui::Checkbox(XorStr("AIM"), &aim_enable);
+		if (aim_enable)
 		{
-			ImGui::Checkbox(XorStr("AIM"), &aim_enable);
-			if (aim_enable)
+			ImGui::Text(XorStr(u8"自瞄检测窗口大小"));
+			ImGui::SameLine(); HelpMarker(u8"可调整范围为50-300");
+			ImGui::DragInt(XorStr("FOV"), &xFOV, 10, 10, 300, "%d px");
+		}
+			if (player_glow)
 			{
-				ImGui::Text(XorStr(u8"自瞄检测窗口大小"));
-				ImGui::SameLine(); HelpMarker(u8"可调整范围为50-300");
-				ImGui::DragInt(XorStr("FOV"), &xFOV, 20, 50, 300, "%d px");
-			}
 			ImGui::ColorEdit4(u8"可见敌人颜色", (float*)playerglow1, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 			ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);

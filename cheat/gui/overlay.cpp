@@ -7,6 +7,9 @@ extern int aim_key;
 
 extern bool esp;
 extern float esp_max_dist;
+extern float esp_font_size;
+
+extern float text_menu_font_size;
 
 extern int aSmoothAmount; // Aimbot smoothness
 extern int xFOV; //Aimbot horizontal FOV (square)
@@ -338,6 +341,10 @@ void Overlay::RenderMenu()
 			HelpMarker(u8"可调整范围为0-2000m,鼠标点击拖动即可改变值");
 			//ImGui::SliderFloat(XorStr("#dis"), &esp_max_dist, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
 			ImGui::DragFloat(XorStr(u8"#dis（0-2000m)"), &esp_max_dist, 20.0f, 0.0f, 2000.0f, "%.0fm");
+			ImGui::Text(XorStr(u8"文字菜单字体大小"));
+			ImGui::SliderFloat(XorStr("#FontSize1"), &text_menu_font_size, 0.7f, 1.5f, "%.3f");
+			ImGui::Text(XorStr(u8"ESP字体大小"));
+			ImGui::SliderFloat(XorStr("#FontSize2"), &esp_font_size, 0.7f, 1.3f, "%.4f");
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
@@ -692,10 +699,18 @@ void Overlay::Text(ImVec2 pos, ImColor color, const char* text_begin, const char
 {
 	ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize(), pos, color, text_begin, text_end, wrap_width, cpu_fine_clip_rect);
 }
+void Overlay::Text(float size,ImVec2 pos, ImColor color, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
+{
+	ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize()*size, pos, color, text_begin, text_end, wrap_width, cpu_fine_clip_rect);
+}
 
 void Overlay::String(ImVec2 pos, ImColor color, const char* text)
 {
 	Text(pos, color, text, text + strlen(text), 200, 0);
+}
+void Overlay::String(ImVec2 pos, ImColor color, const char* text,float size)
+{
+	Text(size, pos, color, text, text + strlen(text), 200, 0);
 }
 
 void Overlay::RectFilled(float x0, float y0, float x1, float y1, ImColor color, float rounding, int rounding_corners_flags)

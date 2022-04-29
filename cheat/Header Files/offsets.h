@@ -28,6 +28,8 @@
 #define OFFSET_BULLET_SPEED         0x1f38 //CWeaponX!m_flProjectileSpeed
 #define OFFSET_BULLET_SCALE         0x1f40 //CWeaponX!m_flProjectileScale
 
+#define OFFSET_TIMESCALE			0x013ccca0//host_timescale
+
 #define GLOW_DISTANCE 0x3B4					//m_highlightServerFadeEndTimes + 52(0x34)
 #define GLOW_TYPE 0x02C0						//m_highlightFunctionBits
 #define ITEM_GLOW_TYPE 0x02C4				//m_highlightFunctionBits + 4

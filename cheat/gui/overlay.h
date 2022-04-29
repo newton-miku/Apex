@@ -23,7 +23,7 @@
 #define BLUE ImColor(0, 150, 255)
 #define PURPLE ImColor(180, 0, 255)
 #define ORANGE ImColor(255, 165, 0)
-#define WHITE ImColor(255, 255, 0)
+#define WHITE ImColor(255, 255, 255)
 
 typedef struct visuals
 {
@@ -63,9 +63,11 @@ public:
 	void DrawLine(ImVec2 a, ImVec2 b, ImColor color, float width);
 	void DrawBox(ImColor color, float x, float y, float w, float h);
 	void Text(ImVec2 pos, ImColor color, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect);
+	void Text(float size,ImVec2 pos, ImColor color, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect);
 	void RectFilled(float x0, float y0, float x1, float y1, ImColor color, float rounding, int rounding_corners_flags);
 	void ProgressBar(float x, float y, float w, float h, int value, int v_max);
 	void String(ImVec2 pos, ImColor color, const char* text);
+	void String(ImVec2 pos, ImColor color, const char* text,float size);
 private:
 	bool running;
 	HWND overlayHWND;

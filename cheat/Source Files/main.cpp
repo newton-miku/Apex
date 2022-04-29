@@ -48,6 +48,8 @@ typedef struct player
 
 uint32_t check = 0xABCD;
 
+bool show_text_menu = false;
+
 int aim_key = 0;
 bool use_nvidia = true;
 bool active = true;
@@ -58,6 +60,9 @@ bool aim_enable = false;
 
 bool esp = false; //read
 float esp_max_dist = 800.0f;
+float esp_font_size = 1.0f;
+
+float text_menu_font_size = 1.0f;
 
 int max_check_glow_item_num = 10000;//物品发光最大遍历数
 bool item_glow = false;//物品发光
@@ -155,11 +160,56 @@ bool IsKeyDown(int vk)
 
 player players[100];
 
+std::string get_aim_key();
 
 
 void Overlay::RenderEsp()
 {
 	next = false;
+	if (show_text_menu)
+	{
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+		ImGui::SetNextWindowSize(ImVec2((float)getWidth(), (float)getHeight()));
+		ImGui::Begin(XorStr("Text_Menu"), (bool*)true, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus);
+		std::string show_menu = XorStr(u8"显示文字菜单—[HOME]");
+		std::string menu0 = XorStr(u8"方框透视 - [F5]");
+		std::string menu1 = XorStr(u8"敌人发光 - [F6]");
+		std::string menu2 = XorStr(u8"物品发光 - [F7]");
+		std::string menu3 = XorStr(u8"开关自瞄 - [F8]");
+		std::string menu3_1 = XorStr(u8"自瞄平滑度: ") + std::to_string(aSmoothAmount) + XorStr(u8" — [<-] [->]");
+		std::string menu3_2 = XorStr(u8"自瞄键： ") + get_aim_key() + XorStr(u8" — [Shift + <-] [Shift + ->]");
+
+		String(ImVec2(200, 290), GREEN, show_menu.c_str(), text_menu_font_size);
+		if (!esp) {
+			String(ImVec2(200, 290+10* text_menu_font_size), RED, menu0.c_str(), text_menu_font_size);
+		}
+		else
+		{
+			String(ImVec2(200, 290 + 10 * text_menu_font_size), GREEN, menu0.c_str(), text_menu_font_size);
+		}if (!player_glow) {
+			String(ImVec2(200, 290 + 20 * text_menu_font_size), RED, menu1.c_str(), text_menu_font_size);
+		}
+		else
+		{
+			String(ImVec2(200, 290 + 20 * text_menu_font_size), GREEN, menu1.c_str(), text_menu_font_size);
+		}
+		if (!item_glow) {
+			String(ImVec2(200, 290 + 30 * text_menu_font_size), RED, menu2.c_str(), text_menu_font_size);
+		}
+		else
+		{
+			String(ImVec2(200, 290 + 30 * text_menu_font_size), GREEN, menu2.c_str(), text_menu_font_size);
+		}if (!aim_enable) {
+			String(ImVec2(200, 290 + 40 * text_menu_font_size), RED, menu3.c_str(), text_menu_font_size);
+		}
+		else
+		{
+			String(ImVec2(200, 290 + 40 * text_menu_font_size), GREEN, menu3.c_str(), text_menu_font_size);
+			String(ImVec2(200, 290 + 50 * text_menu_font_size), GREEN, menu3_1.c_str(), text_menu_font_size);
+			String(ImVec2(200, 290 + 60 * text_menu_font_size), GREEN, menu3_2.c_str(), text_menu_font_size);
+		}
+		ImGui::End();
+	}
 	if (g_Base != 0 && esp)
 	{
 		memset(players, 0, sizeof(players));
@@ -167,7 +217,6 @@ void Overlay::RenderEsp()
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
-
 		if (next && valid)
 		{
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -205,25 +254,25 @@ void Overlay::RenderEsp()
 					if (v.distance)
 					{
 						if (players[i].knocked)
-							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), RED, distance.c_str());  //DISTANCE
+							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), RED, distance.c_str(), esp_font_size);  //DISTANCE
 						else
-							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), GREEN, distance.c_str());  //DISTANCE
+							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), GREEN, distance.c_str(), esp_font_size);  //DISTANCE
 					}
 
 					if (v.healthbar)
 					{
 						ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 5, players[i].height, players[i].health, 100); //health bar
-						String(ImVec2(players[i].boxMiddle, (players[i].b_y + 10)), GREEN, health.c_str());//shownum
+						String(ImVec2(players[i].boxMiddle, (players[i].b_y + 10* esp_font_size)), GREEN, health.c_str(), esp_font_size);//show health
 					}
 					if (v.shieldbar) {
 						ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 5, players[i].height, players[i].shield, 125); //shield bar
 						switch (players[i].max_shield)
 						{
-						case 50:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), WHITE, shield.c_str()); break;
-						case 75:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), BLUE, shield.c_str()); break;
-						case 100:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), PURPLE, shield.c_str()); break;
-						case 125:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), RED, shield.c_str()); break;
-						default:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), WHITE, shield.c_str()); break;
+						case 50:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
+						case 75:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), BLUE, shield.c_str(), esp_font_size); break;
+						case 100:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), PURPLE, shield.c_str(), esp_font_size); break;
+						case 125:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), RED, shield.c_str(), esp_font_size); break;
+						default:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
 						}
 					}
 					if (v.name)
@@ -464,6 +513,15 @@ void item_glow_func(uintptr_t oBaseAddress) {
 	}
 	item_glow_ok = true;
 };
+std::string get_aim_key() {
+	switch (aim_key)
+	{
+	case 0: return XorStr(u8"鼠标左键+鼠标右键"); break;//鼠标左右键
+	case 1: return XorStr(u8"鼠标左键"); break;//鼠标左键
+	case 2: return XorStr(u8"鼠标右键"); break;//鼠标右键
+	case 3: return XorStr(u8"键盘右Alt"); break;//键盘右Alt
+	}
+}
 bool aim_key_on() {
 	bool enable = false;
 	switch (aim_key)
@@ -561,20 +619,42 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		if (IsKeyDown(VK_F6))//F6 敌人发光
 		{
 			player_glow = !player_glow;
-			Sleep(300);
+			Sleep(100);
 		}
 		if (IsKeyDown(VK_F7))//F7 物品发光
 		{
 			item_glow = !item_glow;
-			Sleep(300);
+			Sleep(100);
 		}
 		if (IsKeyDown(VK_F8))//F8 打开自瞄
 		{
-			aim_enable = true;
+			//aim_enable = true;
+			aim_enable = !aim_enable;
+			Sleep(100);
 		}
-		if (IsKeyDown(VK_F9))//F9 关闭自瞄
+		/*if (IsKeyDown(VK_F9))//F9 关闭自瞄
 		{
 			aim_enable = false;
+		}*/
+		if ( !((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_LEFT) && aSmoothAmount > 0) {
+			aSmoothAmount -= 1;//←降低自瞄平滑度
+			Sleep(100);
+		}
+		if ( !((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_RIGHT) && aSmoothAmount < 30) {
+			aSmoothAmount += 1;//→增加自瞄平滑度
+			Sleep(100);
+		}
+		if (((GetAsyncKeyState(VK_LSHIFT) & 0x8000)|| (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_LEFT) && aim_key > 0) {
+			aim_key -= 1;//Shift+←更改自瞄按键
+			Sleep(100);
+		}
+		if (((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_RIGHT) && aim_key < 3) {
+			aim_key += 1;//Shift+→更改自瞄按键
+			Sleep(100);
+		}
+		if (IsKeyDown(VK_HOME)) {
+			show_text_menu = !show_text_menu;//HOME 键开关文字菜单显示
+			Sleep(200);
 		}
 
 		/*if (IsKeyDown(VK_F6) && k_f6 == 0)

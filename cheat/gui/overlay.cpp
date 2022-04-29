@@ -4,7 +4,9 @@ using namespace std;
 extern int aim;
 extern bool aim_enable;
 extern int aim_key;
+
 extern bool esp;
+extern float esp_max_dist;
 
 extern int aSmoothAmount; // Aimbot smoothness
 extern int xFOV; //Aimbot horizontal FOV (square)
@@ -38,6 +40,8 @@ extern float item_glow_distance;
 
 extern int8_t player_main_glow_type;
 extern int8_t player_border_glow_type;
+extern int BorderSize;
+extern int TransparentLevel;
 extern float player_glow_distance;
 
 extern bool zoom_glow;
@@ -103,7 +107,7 @@ BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
 	}
 	else
 	{
-		if (wcscmp(XorStrW(L"overlay"), className) == 0) //Custom overlay
+		if (wcscmp(XorStrW(L"内部专用—覆盖层"), className) == 0) //Custom overlay
 		{
 			HWND* w = (HWND*)lParam;
 			*w = hwnd;
@@ -259,9 +263,9 @@ void Overlay::RenderMenu()
 				ImGui::ColorEdit4(u8"金色品质", (float*)gold_item_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::ColorEdit4(u8"枪械发光颜色", (float*)gun_glow_col, ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				ImGui::Text(XorStr(u8"发光距离")); ImGui::SameLine();
-				HelpMarker(u8"可调整范围为0-800m,ctrl+鼠标单击即可输入值");
+				HelpMarker(u8"可调整范围为0-1200m,鼠标点击拖动即可改变值");
 				//ImGui::SliderFloat(XorStr("#dis"), &item_glow_distance, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
-				ImGui::DragFloat(XorStr("#dis"), &item_glow_distance, 50.0f, 0.0f, 800.0f, "%.0fm");
+				ImGui::DragFloat(XorStr(u8"#dis（0-1200m)"), &item_glow_distance, 50.0f, 0.0f, 1200.0f, "%.0fm");
 				ImGui::Text(u8"物品发光类型设置");
 				if (ImGui::Combo(u8"总发光类型", &main_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
 				{
@@ -317,6 +321,7 @@ void Overlay::RenderMenu()
 			ImGui::Combo(u8"自瞄键", &aim_key, u8"鼠标左右键\0鼠标左键\0鼠标右键\0键盘右Alt\0\0");
 			ImGui::Text(XorStr(u8"Aim at (bone id):"));
 			ImGui::SliderInt(XorStr("##4"), &bone, 1, 20,"%d");
+			ImGui::Text(u8"8为头，5为胸，2 3所指定部位暂不清楚，其余数值请谨慎使用");
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem(XorStr("Visuals")))
@@ -329,6 +334,10 @@ void Overlay::RenderMenu()
 			ImGui::Checkbox(XorStr("Distance"), &v.distance);
 			ImGui::Checkbox(XorStr("Health bar"), &v.healthbar);
 			ImGui::Checkbox(XorStr("Shield bar"), &v.shieldbar);
+			ImGui::Text(XorStr(u8"方框透视距离")); ImGui::SameLine();
+			HelpMarker(u8"可调整范围为0-2000m,鼠标点击拖动即可改变值");
+			//ImGui::SliderFloat(XorStr("#dis"), &esp_max_dist, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
+			ImGui::DragFloat(XorStr(u8"#dis（0-2000m)"), &esp_max_dist, 20.0f, 0.0f, 2000.0f, "%.0fm");
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
@@ -336,50 +345,65 @@ void Overlay::RenderMenu()
 	ImGui::Text(XorStr("Overlay FPS: %.3f ms/frame (%.1f FPS)"), 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	if (ImGui::BeginTabBar(XorStr(u8"玩家发光")))
 	{
-		static int main_glow2 = -1;
-		static int border_glow2 = -1;
-		ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
-		ImGui::Checkbox(XorStr("AIM"), &aim_enable);
-		if (aim_enable)
+		if (ImGui::BeginTabItem(XorStr(u8"玩家发光")))
 		{
-			ImGui::Text(XorStr(u8"自瞄检测窗口大小"));
-			ImGui::SameLine(); HelpMarker(u8"可调整范围为50-300");
-			ImGui::DragInt(XorStr("FOV"), &xFOV, 10, 10, 300, "%d px");
-		}
+			static int main_glow2 = -1;
+			static int border_glow2 = -1;
+			ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
+			
 			if (player_glow)
 			{
-			ImGui::ColorEdit4(u8"可见敌人颜色", (float*)playerglow1, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)playerglow4, ImGuiColorEditFlags_AlphaBar | alpha_flags);
-			ImGui::Text(XorStr(u8"发光距离"));
-			ImGui::SameLine(); HelpMarker(u8"可调整范围为0-10000m,ctrl+鼠标单击即可输入值");
-			//ImGui::SliderFloat(XorStr("#dis"), &player_glow_distance, 0.0f, 10000.0f, "%.0fm");
-			ImGui::DragFloat(XorStr("#dis"), &player_glow_distance, 100.0f, 0.0f, 10000.0f, "%.0fm");
-			if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
-			{
-				switch (main_glow2)
+				ImGui::ColorEdit4(u8"可见敌人颜色", (float*)playerglow1, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"可见倒地颜色", (float*)playerglow2, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"不可见敌人颜色", (float*)playerglow3, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::ColorEdit4(u8"不可见倒地颜色", (float*)playerglow4, ImGuiColorEditFlags_AlphaBar | alpha_flags);
+				ImGui::Text(XorStr(u8"发光距离"));
+				ImGui::SameLine(); HelpMarker(u8"可调整范围为0-10000m,ctrl+鼠标单击即可输入值");
+				//ImGui::SliderFloat(XorStr("#dis"), &player_glow_distance, 0.0f, 10000.0f, "%.0fm");
+				ImGui::DragFloat(XorStr("#dis"), &player_glow_distance, 100.0f, 0.0f, 10000.0f, "%.0fm");
+				if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0\0"))
 				{
-				case 0: player_main_glow_type = 101; break;
-				case 1: player_main_glow_type = 102; break;
-				case 2: player_main_glow_type = 103; break;
-				case 3: player_main_glow_type = 104; break;
-				case 4: player_main_glow_type = 105; break;
-				case 5: player_main_glow_type = 106; break;
+					switch (main_glow2)
+					{
+					case 0: player_main_glow_type = 101; break;
+					case 1: player_main_glow_type = 102; break;
+					case 2: player_main_glow_type = 103; break;
+					case 3: player_main_glow_type = 104; break;
+					case 4: player_main_glow_type = 105; break;
+					case 5: player_main_glow_type = 106; break;
+					case 6: player_main_glow_type = 107; break;
+					case 7: player_main_glow_type = 108; break;
+					}
 				}
-			}
-			if (ImGui::Combo(u8"边界发光类型", &border_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
-			{
-				switch (border_glow2)
+				if (ImGui::Combo(u8"边界发光类型", &border_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0\0"))
 				{
-				case 0: player_border_glow_type = 101; break;
-				case 1: player_border_glow_type = 102; break;
-				case 2: player_border_glow_type = 103; break;
-				case 3: player_border_glow_type = 104; break;
-				case 4: player_border_glow_type = 105; break;
-				case 5: player_border_glow_type = 106; break;
+					switch (border_glow2)
+					{
+					case 0: player_border_glow_type = 101; break;
+					case 1: player_border_glow_type = 102; break;
+					case 2: player_border_glow_type = 103; break;
+					case 3: player_border_glow_type = 104; break;
+					case 4: player_border_glow_type = 105; break;
+					case 5: player_border_glow_type = 106; break;
+					case 6: player_border_glow_type = 107; break;
+					case 7: player_border_glow_type = 108; break;
+					}
 				}
+				ImGui::SliderInt(XorStr(u8"敌人发光边界大小"), &BorderSize, 0, 100, "%d");
+				ImGui::SliderInt(XorStr(u8"敌人发光透明度"), &TransparentLevel, 0, 100, "%d");
 			}
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem(XorStr(u8"AIM")))
+		{
+			ImGui::Checkbox(XorStr("AIM"), &aim_enable);
+			if (aim_enable)
+			{
+				ImGui::Text(XorStr(u8"自瞄检测窗口大小"));
+				ImGui::SameLine(); HelpMarker(u8"可调整范围为50-300,鼠标点击拖动即可改变值");
+				ImGui::DragInt(XorStr("FOV"), &xFOV, 10, 10, 300, "%d px");
+			}
+			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
 	}
@@ -419,9 +443,33 @@ DWORD Overlay::CreateOverlay()
 	Sleep(300);
 	if (overlayHWND == 0)
 	{
-		printf(XorStr("Can't find the overlay\n"));
-		Sleep(1000);
-		exit(0);
+		for (int a = 0; a < 20; a++)
+		{
+			if (overlayHWND == 0)
+			{
+				use_nvidia = !use_nvidia;
+				EnumWindows(EnumWindowsCallback, (LPARAM)&overlayHWND);
+			}
+			else
+			{
+				break;
+			}
+		}
+		if (overlayHWND == 0)
+		{
+			printf(XorStr("Can't find the overlay\n"));
+			Sleep(1000);
+			exit(0);
+		}
+	}
+	if(use_nvidia)
+	{
+		system(XorStr("taskkill /F /T /IM overlay_ap.exe")); //custom overlay process name
+		printf("使用的覆盖层为NVIDIA GeForce Overlay!");
+	}
+	else
+	{
+		printf("使用的覆盖层为overlay_ap.exe!");
 	}
 
 	HDC hDC = ::GetWindowDC(NULL);

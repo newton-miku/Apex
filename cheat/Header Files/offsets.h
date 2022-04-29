@@ -8,14 +8,17 @@
 #define OFFSET_BONES 0x0f38            //m_bConstrainBetweenEndpoints
 #define OFFSET_NAME_LIST 0xb97e0d0			//NameList
 #define OFFSET_NAME	0x589                 //m_iName
+#define OFFSET_SIG_NAME 0x580			//m_iSignifierName
 
 #define OFFSET_MATRIX 0x11a210				//view_matrix ViewMatrix
 #define OFFSET_RENDER 0x74bad90				//view_render ViewRender
 #define OFFSET_HEALTH 0x438					//CPlayer->m_iHealth
-#define OFFSET_SHIELD 0x170					//CBaseEntity->m_shieldHealth
+#define OFFSET_SHIELD 0x0170					//CBaseEntity->m_shieldHealth
+#define OFFSET_SHIELD_MAX 0x0174					//CBaseEntity->m_shieldHealthMax
+#define OFFSET_LIFESTATE 0x0798				//m_lifeState, >0 = dead
 
 #define OFFSET_TEAM	0x0448                 //m_iTeamNum
-#define OFFSET_BLEED_OUT_STATE 0x2728     //m_bleedoutState
+#define OFFSET_BLEED_OUT_STATE 0x2728     //m_bleedoutState,>0 = knocked
 #define OFFSET_VISIBLE_TIME 0x1b14        //CPlayer!lastVisibleTime
 #define OFFSET_ITEM_ID	0x16b8
 
@@ -25,8 +28,8 @@
 #define OFFSET_BULLET_SPEED         0x1f38 //CWeaponX!m_flProjectileSpeed
 #define OFFSET_BULLET_SCALE         0x1f40 //CWeaponX!m_flProjectileScale
 
-#define GLOW_DISTANCE 0x3B4
-#define GLOW_TYPE 0x02C0						//m_playerLocalGravityLineStartEntity
-#define ITEM_GLOW_TYPE 0x02C4				//m_playerLocalGravityLineEndEntity
+#define GLOW_DISTANCE 0x3B4					//m_highlightServerFadeEndTimes + 52(0x34)
+#define GLOW_TYPE 0x02C0						//m_highlightFunctionBits
+#define ITEM_GLOW_TYPE 0x02C4				//m_highlightFunctionBits + 4
 #define OFFSET_GLOW_ENABLE          0x3c8 //1 = enabled, 2 = disabled
 #define OFFSET_GLOW_THROUGH_WALLS   0x3d0 //2 = enabled, 5 = disabled

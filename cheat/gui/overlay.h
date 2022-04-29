@@ -20,7 +20,8 @@
 
 #define GREEN ImColor(0, 255, 0)
 #define RED ImColor(255, 0, 0)
-#define BLUE ImColor(0, 0, 255)
+#define BLUE ImColor(0, 150, 255)
+#define PURPLE ImColor(180, 0, 255)
 #define ORANGE ImColor(255, 165, 0)
 #define WHITE ImColor(255, 255, 0)
 

@@ -19,9 +19,9 @@
 
 int screenWeight = 1920; // In-game resolution
 int screenHeight = 1080;
-int xFOV = 50; //Aimbot horizontal FOV (square)
-int yFOV = 50; //Aimbot vertical FOV (square)
-int aSmoothAmount = 3; // Aimbot smoothness
+int xFOV = 70; //Aimbot horizontal FOV (square)
+int yFOV = 70; //Aimbot vertical FOV (square)
+int aSmoothAmount = 12; // Aimbot smoothness
 
 uintptr_t localPlayer;
 uintptr_t entList;
@@ -40,8 +40,10 @@ typedef struct player
 	bool knocked = false;
 	bool visible = false;
 	int health = 0;
+	int max_health = 0;
 	int shield = 0;
-	char name[32] = { 0 };
+	int max_shield = 0;
+	char name[64] = { 0 };
 }player;
 
 uint32_t check = 0xABCD;
@@ -53,7 +55,9 @@ bool ready = false;
 extern visuals v;
 int aim = 0; //read
 bool aim_enable = false;
+
 bool esp = false; //read
+float esp_max_dist = 800.0f;
 
 int max_check_glow_item_num = 10000;//物品发光最大遍历数
 bool item_glow = false;//物品发光
@@ -77,8 +81,11 @@ float item_glow_distance = 200.0f;//物品发光距离
 
 int8_t player_main_glow_type = 101;//玩家发光主类型
 int8_t player_border_glow_type = 101;//玩家发光边界类型
+int8_t BorderSize_c = 46;
+int8_t TransparentLevel_c = 46;
+int BorderSize = 46;//玩家发光边界尺寸
+int TransparentLevel = 90;//玩家发光透明度
 float player_glow_distance = 500.0f;//玩家发光距离
-float distances = 0;
 
 bool player_glow = true;//玩家发光
 float playerglow1[4] = { 0.0f, 0.837104f, 0.056f, 0.9f };//可见敌人
@@ -102,7 +109,7 @@ uint64_t g_Base = 0; //write
 float max_dist = 200.0f * 40.0f; //read
 float smooth = 12.0f;
 float max_fov = 15.0f;
-int bone = 7;
+int bone = 3;//head - 8,chest - 3     2/5?
 
 bool glow_gun = false;
 int glow_gun_num = -1;
@@ -169,15 +176,19 @@ void Overlay::RenderEsp()
 
 			for (int i = 0; i < 64; i++)
 			{
-				if (players[i].health > 0 && players[i].dist > 1)
+				if (players[i].health > 0 && players[i].dist > 1 && (players[i].dist/39.62)< esp_max_dist)
 				{
 					std::string distance = std::to_string(players[i].dist / 39.62);
 					distance = distance.substr(0, distance.find('.')) + "m(" + std::to_string(players[i].entity_team) + ")";
+					std::string health = std::to_string(players[i].health);
+					health = XorStr(u8"血：") + health;
+					std::string shield = std::to_string(players[i].shield);
+					shield = XorStr(u8"甲：") + shield;
 					if (v.box)
 					{
 						if (players[i].visible)
 						{
-							if (players[i].dist < 1600.0f)
+							if (players[i].dist < esp_max_dist)
 								DrawBox(RED, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
 							else
 								DrawBox(ORANGE, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
@@ -200,12 +211,23 @@ void Overlay::RenderEsp()
 					}
 
 					if (v.healthbar)
+					{
 						ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 5, players[i].height, players[i].health, 100); //health bar
-					if (v.shieldbar)
+						String(ImVec2(players[i].boxMiddle, (players[i].b_y + 10)), GREEN, health.c_str());//shownum
+					}
+					if (v.shieldbar) {
 						ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 5, players[i].height, players[i].shield, 125); //shield bar
-
+						switch (players[i].max_shield)
+						{
+						case 50:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), WHITE, shield.c_str()); break;
+						case 75:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), BLUE, shield.c_str()); break;
+						case 100:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), PURPLE, shield.c_str()); break;
+						case 125:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), RED, shield.c_str()); break;
+						default:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20)), WHITE, shield.c_str()); break;
+						}
+					}
 					if (v.name)
-						String(ImVec2(players[i].boxMiddle, (players[i].b_y + players[i].height/* + 15*/)), WHITE, players[i].name);
+						String(ImVec2(players[i].boxMiddle, (players[i].b_y - players[i].height - 15)), WHITE, players[i].name);
 				}
 			}
 
@@ -254,12 +276,22 @@ struct Matrix {
 
 struct Vector3 _WorldToScreen(const struct Vector3 pos, struct Matrix matrix) {
 	struct Vector3 out;
+
+	
+
+
 	float _x = matrix.matrix[0] * pos.x + matrix.matrix[1] * pos.y + matrix.matrix[2] * pos.z + matrix.matrix[3];
 	float _y = matrix.matrix[4] * pos.x + matrix.matrix[5] * pos.y + matrix.matrix[6] * pos.z + matrix.matrix[7];
 	out.z = matrix.matrix[12] * pos.x + matrix.matrix[13] * pos.y + matrix.matrix[14] * pos.z + matrix.matrix[15];
 
-	_x *= 1.f / out.z;
-	_y *= 1.f / out.z;
+	if (out.z < 0.01f)
+	{
+		out.x = out.y = out.z = 0.0f;
+		return out; 
+	}
+
+	_x *= 1.0f / out.z;
+	_y *= 1.0f / out.z;
 
 	int width = screenWeight;
 	int height = screenHeight;
@@ -296,8 +328,8 @@ Vector3 GetEntityBasePosition(uintptr_t ent)
 	return read<Vector3>(ent + OFFSET_ORIGIN);
 }
 
-void esp_func(DWORD64 Entity, Matrix m, uintptr_t locPlayer, player* players) {
-	float boxThickness = 2;
+void esp_init_func(DWORD64 Entity, Matrix m, uintptr_t locPlayer, player* players) {
+	//float boxThickness = 2;
 
 	Vector3 entHead = GetEntityBonePosition(Entity, 8, GetEntityBasePosition(Entity));
 	Vector3 w2sHead = _WorldToScreen(entHead, m); //if (w2sHead.z <= 0.f) return;
@@ -340,29 +372,33 @@ void player_glow_f(DWORD64 Entity, float* color)
 	if (player_glow) {
 		write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 		write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-		write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,35,90 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+		BorderSize_c = (int8_t)BorderSize;
+		TransparentLevel_c = (int8_t)TransparentLevel;
+		write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,BorderSize_c,TransparentLevel_c }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 		write<float>(Entity + GLOW_DISTANCE, player_glow_distance * 3000.0f / 70.0f);//玩家发光距离
-		write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
+		write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of enemies
 		write<float>(Entity + 0x1D4, color[1] * 255);  // g
 		write<float>(Entity + 0x1D8, color[2] * 255); // b
 	}
 }
-void get_name(DWORD64 Entity, uint64_t index, char* name)
+void get_name(uintptr_t oBaseAddress, uintptr_t Entity, uint64_t index, char* name)
 {
+	uintptr_t nameindex = read<uintptr_t>(Entity + 0x38);
 	index *= 0x10;
-	DWORD64 name_ptr = 0;
-	name_ptr = read<DWORD64>(Entity + OFFSET_NAME_LIST + index);
-	name = read<char*>(name_ptr);
+	uintptr_t name_ptr = read<uintptr_t>(oBaseAddress + OFFSET_NAME_LIST + ((nameindex - 1) << 4));
+	//std::string names = read<std::string>(name_ptr);
+	//return names;
+	std::string names;
+	names = readmem<std::string>(name_ptr, 24);
+	strcpy(name, names.c_str());
 }
 void item_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { item_main_glow_type,item_border_glow_type,43,85 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { item_main_glow_type,item_border_glow_type,30,70 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + GLOW_DISTANCE, item_glow_distance * 3000.0f / 70.0f);//物品发光距离
-	//distances = read<float>(Entity + GLOW_DISTANCE);
-	//printf("itemid = %d, dis = %.2f\n",itemid, item_glow_distance);
-	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of not visible enemies
+	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness
 	write<float>(Entity + 0x1D4, color[1] * 255);  // g
 	write<float>(Entity + 0x1D8, color[2] * 255); // b
 }
@@ -439,7 +475,7 @@ bool aim_key_on() {
 	}
 	return enable;
 }
-void aim_func(int aX, int aY) {
+void aim_func(int closestX, int closestY, int crosshairX, int crosshairY) {
 	// After entity loop ends
 	if (closestX != 9999 && closestY != 9999)
 	{
@@ -447,6 +483,7 @@ void aim_func(int aX, int aY) {
 		if (aim_key_on())
 		{
 			//		 If mouse cursor shown
+
 			CURSORINFO ci = { sizeof(CURSORINFO) };
 			if (GetCursorInfo(&ci))
 			{
@@ -455,8 +492,8 @@ void aim_func(int aX, int aY) {
 					aY = (closestY - crosshairY) / aSmoothAmount;
 				}
 				//printf("%d\t%d\n", aX,aY);
-				mouse_move((int)aX, (int)(aY));
-				//mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
+				//mouse_move((int)aX, (int)(aY));
+				mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
 			}
 		}
 	}
@@ -511,17 +548,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		{
 			active = false;
 		}*/
-		if (IsKeyDown(VK_F6))
-		{
-			player_glow = !player_glow;
-			Sleep(300);
-		}
-		if (IsKeyDown(VK_F7))
-		{
-			item_glow = !item_glow;
-			Sleep(300);
-		}
-		if (IsKeyDown(VK_F5) && k_f5 == 0)
+		if (IsKeyDown(VK_F5) && k_f5 == 0)//F5 ESP方框
 		{
 			k_f5 = 1;
 			esp = !esp;
@@ -530,11 +557,22 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		{
 			k_f5 = 0;
 		}
-		if (IsKeyDown(VK_F8))
+
+		if (IsKeyDown(VK_F6))//F6 敌人发光
+		{
+			player_glow = !player_glow;
+			Sleep(300);
+		}
+		if (IsKeyDown(VK_F7))//F7 物品发光
+		{
+			item_glow = !item_glow;
+			Sleep(300);
+		}
+		if (IsKeyDown(VK_F8))//F8 打开自瞄
 		{
 			aim_enable = true;
 		}
-		if (IsKeyDown(VK_F9))
+		if (IsKeyDown(VK_F9))//F9 关闭自瞄
 		{
 			aim_enable = false;
 		}
@@ -600,9 +638,6 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 
 			}
 		}
-		//std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		//std::thread esp(&Overlay::RenderEsp);
-		//esp.detach();
 		if (player_glow || esp)
 		{
 			// Matrix set up
@@ -625,16 +660,18 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 				if (Entity == 0)
 					continue;
 				DWORD64 EntityHandle = read<DWORD64>(Entity + OFFSET_NAME);
-				std::string Identifier = read<std::string>(EntityHandle);
+				std::string Identifier = read<std::string>(EntityHandle);//"player" or null
 				LPCSTR IdentifierC = Identifier.c_str();
-
-
 				valid = false; next = false;
 				if (strcmp(IdentifierC, "player"))
 				{
-					//strcpy(players[j].name, Identifier.c_str());
-					get_name(Entity, j, players[j].name);
+					get_name(oBaseAddress, Entity, j-1, players[j].name);
+					//strcpy(players[j].name,name.c_str());
 					//printf("%s\n", players[i].name);
+					//printf("0:%s\t", name.c_str());
+					//printf("1:%s\n", players[j].name);
+					//printf("2:%s\t", IdentifierC);
+					//printf("3:%s\n", Identifier.c_str());
 					Vector3 HeadPosition = GetEntityBonePosition(Entity, bone, GetEntityBasePosition(Entity));
 
 					// Convert to screen position
@@ -654,22 +691,23 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 					// Get player team ID
 					int playerTeamID = read<int>(locPlayer + OFFSET_TEAM);
 
+					//Get player health
+					int dead = read<int>(Entity + OFFSET_LIFESTATE);//dead == 0，player is dead
+					players[j].health = read<int>(Entity + OFFSET_HEALTH);
+
 					// Get entity team ID
 					int entTeamID = read<int>(Entity + OFFSET_TEAM);
 					players[j].entity_team = entTeamID;
 
-					//Get player health
-					float health = read<int>(Entity + OFFSET_HEALTH);
-					players[j].health = health;
-
 					//Get player shield
-					float shield = read<int>(Entity + OFFSET_SHIELD);
-					players[j].shield = shield;
+					players[j].shield = read<int>(Entity + OFFSET_SHIELD);
+					players[j].max_shield = read<int>(Entity + OFFSET_SHIELD_MAX);
+					
 
 					// Is it an enemy
 					if (entTeamID != playerTeamID)
 					{
-						esp_func(Entity, m, locPlayer, &players[j]);
+						esp_init_func(Entity, m, locPlayer, &players[j]);
 						/*
 						write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 						write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
@@ -754,30 +792,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			next = true;
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			if (aim_enable)
-				aim_func(aX, aY);
-			/* {
-				// After entity loop ends
-				if (closestX != 9999 && closestY != 9999)
-				{
-					//	 If aimbot key pressed
-					if (aim_key_on())
-					{
-						//		 If mouse cursor shown
-						
-						CURSORINFO ci = { sizeof(CURSORINFO) };
-						if (GetCursorInfo(&ci))
-						{
-							if (ci.flags == 0) {
-								aX = (closestX - crosshairX) / aSmoothAmount;
-								aY = (closestY - crosshairY) / aSmoothAmount;
-							}
-							//printf("%d\t%d\n", aX,aY);
-							mouse_move((int)aX, (int)(aY));
-							//mouse_event(MOUSEEVENTF_MOVE, aX, aY, 0, 0); // enable aimbot when mouse cursor is hidden
-						}
-					}
-				}
-			}*/
+				aim_func(closestX, closestY, crosshairX, crosshairY);
 			//Sleep(100);
 		}
 

@@ -32,6 +32,7 @@
     <ClInclude Include="gui\overlay.h" />
     <ClInclude Include="gui\XorString.h" />
     <ClInclude Include="Header Files\Driver.h" />
+    <ClInclude Include="Header Files\ini.cpp" />
     <ClInclude Include="Header Files\offsets.h" />
     <ClInclude Include="Tools\Tools.h" />
     <ClInclude Include="Tools\xor.hpp" />
@@ -165,7 +166,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>

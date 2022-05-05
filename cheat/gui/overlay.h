@@ -28,7 +28,7 @@
 typedef struct visuals
 {
 	bool box = true;
-	bool line = true;
+	bool line = false;
 	bool distance = true;
 	bool healthbar = true;
 	bool shieldbar = true;
@@ -68,6 +68,7 @@ public:
 	void ProgressBar(float x, float y, float w, float h, int value, int v_max);
 	void String(ImVec2 pos, ImColor color, const char* text);
 	void String(ImVec2 pos, ImColor color, const char* text,float size);
+	void String(float size, ImVec2 pos, ImColor color, const char* text);
 private:
 	bool running;
 	HWND overlayHWND;

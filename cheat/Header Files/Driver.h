@@ -61,7 +61,7 @@ using unique_handle = std::unique_ptr<HANDLE, HandleDisposer>;
 template<typename ... Arg>
 inline uint64_t CallHook(const Arg ... args)
 {
-	void* hooked_func = GetProcAddress(LoadLibrary(("win32u.dll")), ("NtGdiDdDDINetDispGetNextChunkInfo"));
+	void* hooked_func = GetProcAddress(LoadLibrary("win32u.dll"), ("NtOpenCompositionSurfaceSectionInfo")); //NtGdiDdDDINetDispGetNextChunkInfo
 
 	auto func = static_cast<uint64_t(_stdcall*)(Arg...)>(hooked_func);
 

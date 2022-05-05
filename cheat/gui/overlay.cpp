@@ -10,6 +10,7 @@ extern float esp_max_dist;
 extern float esp_font_size;
 
 extern float text_menu_font_size;
+extern bool show_watcher;
 
 extern int aSmoothAmount; // Aimbot smoothness
 extern int xFOV; //Aimbot horizontal FOV (square)
@@ -37,12 +38,12 @@ extern float red_item_col[4];
 extern float purple_item_col[4];
 extern float blue_item_col[4];
 
-extern int8_t item_main_glow_type;
-extern int8_t item_border_glow_type;
+extern int item_main_glow_type;
+extern int item_border_glow_type;
 extern float item_glow_distance;
 
-extern int8_t player_main_glow_type;
-extern int8_t player_border_glow_type;
+extern int player_main_glow_type;
+extern int player_border_glow_type;
 extern int BorderSize;
 extern int TransparentLevel;
 extern float player_glow_distance;
@@ -67,6 +68,8 @@ extern float smooth;
 extern float max_fov;
 extern int bone;
 extern bool thirdperson;
+extern bool fakeduck;
+extern bool keepjump;
 int width;
 int height;
 bool k_leftclick = false;
@@ -199,7 +202,7 @@ void Overlay::RenderMenu()
 				ImGui::Checkbox(XorStr(u8"加速装填器"), &fast_reload_glow);
 				ImGui::Checkbox(XorStr(u8"紫金装备"), &glow_suit);
 				ImGui::Checkbox(XorStr(u8"紫金配件"), &glow_gunPart);
-				ImGui::Checkbox(XorStr(u8"枪械发光"), &glow_gun);
+				ImGui::Checkbox(XorStr(u8"枪械发光"), &glow_gun); ImGui::SameLine();
 
 				if (glow_gun) {
 					if (ImGui::Combo(u8"总发光类型", &glow_item_index, u8"敖犬\0 Lstar\0哈沃克\0专注\0三重\0平行\0汗落\0转换者\0 r99\0猎兽\0长弓\0滋崩\0 r301\0 eva8\0莫桑比克\0和平喷\0小帮手\0 p2020\0 re45\0哨兵\0弓\0 3030\0暴走\0 car\0\0"))
@@ -234,8 +237,6 @@ void Overlay::RenderMenu()
 					}
 				}
 			}
-
-			//ImGui::Checkbox(XorStr("Thirdperson"), &thirdperson);
 			ImGui::EndTabItem();
 		}
 		if (item_glow) {
@@ -270,7 +271,9 @@ void Overlay::RenderMenu()
 				//ImGui::SliderFloat(XorStr("#dis"), &item_glow_distance, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
 				ImGui::DragFloat(XorStr(u8"#dis（0-1200m)"), &item_glow_distance, 50.0f, 0.0f, 1200.0f, "%.0fm");
 				ImGui::Text(u8"物品发光类型设置");
-				if (ImGui::Combo(u8"总发光类型", &main_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
+				ImGui::SliderInt(XorStr(u8"总发光类型"), &main_glow1, 1, 6, "%d");
+				ImGui::SliderInt(XorStr(u8"边界发光类型"), &border_glow1, 1, 6, "%d");
+				/*if (ImGui::Combo(u8"边界发光类型", &main_glow1, u8"1\0 2\0 3\0 4\0 5\0 6\0\0"))
 				{
 					switch (main_glow1)
 					{
@@ -293,7 +296,7 @@ void Overlay::RenderMenu()
 					case 4: item_border_glow_type = 105; break;
 					case 5: item_border_glow_type = 106; break;
 					}
-				}
+				}*/
 				ImGui::EndTabItem();
 			}
 		}
@@ -334,13 +337,15 @@ void Overlay::RenderMenu()
 			ImGui::SameLine(0, 70.0f);
 			ImGui::Checkbox(XorStr("Name"), &v.name);
 			ImGui::Checkbox(XorStr("Line"), &v.line);
+			ImGui::SameLine(0, 70.0f);
+			ImGui::Checkbox(XorStr(u8"显示观众列表"), &v.distance);
 			ImGui::Checkbox(XorStr("Distance"), &v.distance);
 			ImGui::Checkbox(XorStr("Health bar"), &v.healthbar);
 			ImGui::Checkbox(XorStr("Shield bar"), &v.shieldbar);
 			ImGui::Text(XorStr(u8"方框透视距离")); ImGui::SameLine();
 			HelpMarker(u8"可调整范围为0-2000m,鼠标点击拖动即可改变值");
-			//ImGui::SliderFloat(XorStr("#dis"), &esp_max_dist, 0.0f, 10000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
-			ImGui::DragFloat(XorStr(u8"#dis（0-2000m)"), &esp_max_dist, 20.0f, 0.0f, 2000.0f, "%.0fm");
+			ImGui::SliderFloat(XorStr(u8"#dis（0-2000m)"), &esp_max_dist, 0.0f, 2000.0f, "%.0fm");//此为滑块调整条，疑似无法手动输入值
+			//ImGui::DragFloat(XorStr(u8"#dis（0-2000m)"), &esp_max_dist, 20.0f, 0.0f, 2000.0f, "%.0fm");
 			ImGui::Text(XorStr(u8"文字菜单字体大小"));
 			ImGui::SliderFloat(XorStr("#FontSize1"), &text_menu_font_size, 0.7f, 1.5f, "%.3f");
 			ImGui::Text(XorStr(u8"ESP字体大小"));
@@ -354,8 +359,11 @@ void Overlay::RenderMenu()
 	{
 		if (ImGui::BeginTabItem(XorStr(u8"玩家发光")))
 		{
-			static int main_glow2 = -1;
-			static int border_glow2 = -1;
+			static int main_glow2 = 1;
+			static int border_glow2 = 1;
+			//ImGui::Checkbox(XorStr(u8"第三人称"), &thirdperson);
+			ImGui::Checkbox(XorStr(u8"假蹲"), &fakeduck);
+			ImGui::Checkbox(XorStr(u8"连跳"), &keepjump);
 			ImGui::Checkbox(XorStr(u8"玩家发光"), &player_glow);
 			
 			if (player_glow)
@@ -367,8 +375,10 @@ void Overlay::RenderMenu()
 				ImGui::Text(XorStr(u8"发光距离"));
 				ImGui::SameLine(); HelpMarker(u8"可调整范围为0-10000m,ctrl+鼠标单击即可输入值");
 				//ImGui::SliderFloat(XorStr("#dis"), &player_glow_distance, 0.0f, 10000.0f, "%.0fm");
-				ImGui::DragFloat(XorStr("#dis"), &player_glow_distance, 100.0f, 0.0f, 10000.0f, "%.0fm");
-				if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0\0"))
+				ImGui::DragFloat(XorStr(u8"#dis"), &player_glow_distance, 100.0f, 0.0f, 10000.0f, "%.0fm");
+				ImGui::SliderInt(XorStr(u8"#总发光类型"), &player_main_glow_type, 1, 8, "%d");
+				ImGui::SliderInt(XorStr(u8"#边界发光类型"), &player_border_glow_type, 1, 8, "%d");
+				/*if (ImGui::Combo(u8"总发光类型", &main_glow2, u8"1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0\0"))
 				{
 					switch (main_glow2)
 					{
@@ -395,7 +405,7 @@ void Overlay::RenderMenu()
 					case 6: player_border_glow_type = 107; break;
 					case 7: player_border_glow_type = 108; break;
 					}
-				}
+				}*/
 				ImGui::SliderInt(XorStr(u8"敌人发光边界大小"), &BorderSize, 0, 100, "%d");
 				ImGui::SliderInt(XorStr(u8"敌人发光透明度"), &TransparentLevel, 0, 100, "%d");
 			}
@@ -476,7 +486,7 @@ DWORD Overlay::CreateOverlay()
 	}
 	else
 	{
-		printf("使用的覆盖层为overlay_ap.exe!");
+		printf("使用的覆盖层为overlay_ap.exe!\n");
 	}
 
 	HDC hDC = ::GetWindowDC(NULL);
@@ -702,15 +712,20 @@ void Overlay::Text(ImVec2 pos, ImColor color, const char* text_begin, const char
 void Overlay::Text(float size,ImVec2 pos, ImColor color, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
 	ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize()*size, pos, color, text_begin, text_end, wrap_width, cpu_fine_clip_rect);
+
 }
 
 void Overlay::String(ImVec2 pos, ImColor color, const char* text)
 {
-	Text(pos, color, text, text + strlen(text), 200, 0);
+	Text(pos, color, text, text + strlen(text), 400, 0);
 }
 void Overlay::String(ImVec2 pos, ImColor color, const char* text,float size)
 {
-	Text(size, pos, color, text, text + strlen(text), 200, 0);
+	Text(size, pos, color, text, text + strlen(text), 400, 0);
+}
+void Overlay::String(float size,ImVec2 pos, ImColor color, const char* text)
+{
+	ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), size, pos, color, text, text + strlen(text));
 }
 
 void Overlay::RectFilled(float x0, float y0, float x1, float y1, ImColor color, float rounding, int rounding_corners_flags)

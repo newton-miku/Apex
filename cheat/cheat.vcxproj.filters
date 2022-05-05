@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Tools\Tools.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Source Files\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\overlay.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui_draw.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui_impl_dx11.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui_tables.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui_widgets.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\imgui\imgui_impl_win32.cpp">
+      <Filter>gui\imgui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gui\font.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\Driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\offsets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\XorString.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\xor.hpp">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Tools.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\gui.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imconfig.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imgui.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imgui_impl_dx11.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imgui_impl_win32.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imstb_truetype.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imstb_textedit.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imstb_rectpack.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\imgui\imgui_internal.h">
+      <Filter>gui\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\overlay.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Header Files\ini.cpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="gui">
+      <UniqueIdentifier>{b8a97310-8ed3-4135-8874-467e939ab080}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{7e64c3b5-f744-4583-940e-f8d200ca6b57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{67859ad7-0ea3-4019-9f19-3320aa49f587}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{6b8301b8-4f82-4f82-a1ac-540b78af162c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui\imgui">
+      <UniqueIdentifier>{ab93ab64-a8ca-4650-89e2-aeff818d5e4e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

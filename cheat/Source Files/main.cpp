@@ -10,18 +10,20 @@
 #include <ctime>
 #include <random>
 #include <thread>
+#include"stdio.h"
 
 #include "../Tools/xor.hpp"
 #include "../Tools/Tools.h"
 #include "../Header Files/offsets.h"
 #include "../Header Files/Driver.h"
 #include "../gui/gui.h"
+#include "../Header Files/ini.cpp"
 
 int screenWeight = 1920; // In-game resolution
 int screenHeight = 1080;
-int xFOV = 70; //Aimbot horizontal FOV (square)
+int xFOV = 70; //Aimbot horizontal FOV (square) //自瞄窗口大小
 int yFOV = 70; //Aimbot vertical FOV (square)
-int aSmoothAmount = 12; // Aimbot smoothness
+int aSmoothAmount = 12; // Aimbot smoothness //自瞄平滑度
 
 uintptr_t localPlayer;
 uintptr_t entList;
@@ -40,15 +42,18 @@ typedef struct player
 	bool knocked = false;
 	bool visible = false;
 	int health = 0;
+	int dead = 0;
 	int max_health = 0;
 	int shield = 0;
 	int max_shield = 0;
+	int Observer = 0;
 	char name[64] = { 0 };
 }player;
 
 uint32_t check = 0xABCD;
 
-bool show_text_menu = false;
+bool show_text_menu = false;//显示文字菜单
+bool show_watcher = false;//显示观众
 
 int aim_key = 0;
 bool use_nvidia = true;
@@ -59,10 +64,10 @@ int aim = 0; //read
 bool aim_enable = false;
 
 bool esp = false; //read
-float esp_max_dist = 800.0f;
-float esp_font_size = 1.0f;
+float esp_max_dist = 800.1f;//ESP最大显示距离
+float esp_font_size = 1.0f;//ESP字体大小
 
-float text_menu_font_size = 1.0f;
+float text_menu_font_size = 1.0f;//文字菜单字体大小
 
 int max_check_glow_item_num = 10000;//物品发光最大遍历数
 bool item_glow = false;//物品发光
@@ -80,16 +85,16 @@ float blue_item_col[4] = { 0.2805f, 0.7558f, 1.0f, 0.9f };//蓝色
 
 float gun_glow_col[4] = { 1.0f, 0.607f, 0.0f, 0.9f };//枪械发光
 
-int8_t item_main_glow_type = 101;//物品主发光类型
-int8_t item_border_glow_type = 101;//物品发光边界类型
+int item_main_glow_type = 1;//物品主发光类型
+int item_border_glow_type = 1;//物品发光边界类型
 float item_glow_distance = 200.0f;//物品发光距离
 
-int8_t player_main_glow_type = 101;//玩家发光主类型
-int8_t player_border_glow_type = 101;//玩家发光边界类型
-int8_t BorderSize_c = 46;
-int8_t TransparentLevel_c = 46;
+int player_main_glow_type = 1;//玩家发光主类型
+int player_border_glow_type = 1;//玩家发光边界类型
+int8_t BorderSize_c = 46;//玩家发光边缘尺寸
+int8_t TransparentLevel_c = 80;//玩家发光透明度
 int BorderSize = 46;//玩家发光边界尺寸
-int TransparentLevel = 90;//玩家发光透明度
+int TransparentLevel = 80;//玩家发光透明度
 float player_glow_distance = 500.0f;//玩家发光距离
 
 bool player_glow = true;//玩家发光
@@ -100,7 +105,7 @@ float playerglow4[4] = { 0.0f, 0.0f, 1.0f, 0.9f };//不可见倒地敌人
 
 bool zoom_glow = false;//瞄准镜发光
 int zoom_num = -1;
-float zoom_col[4] = { 1.0f, 1.0f, 1.0f, 0.9f };//瞄准镜颜色
+float zoom_col[4] = { 1.0f, 1.0f, 1.0f, 0.9f };//瞄准镜发光颜色
 
 bool blue_glow = false;//蓝色物资发光
 bool heat_shield_glow = false;//隔热板
@@ -119,6 +124,9 @@ int bone = 3;//head - 8,chest - 3     2/5?
 bool glow_gun = false;
 int glow_gun_num = -1;
 bool thirdperson = false;
+bool tmp_third_person = false;
+bool fakeduck = false;
+bool keepjump = false;
 
 bool valid = false; //write
 bool next = true; //read write
@@ -145,11 +153,11 @@ uintptr_t init_main() {
 	while (!oBaseAddress) // request the module base from driver
 	{
 		oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
-		printf("进程id：%d\n", oPID);
-		printf("基址：%d\n", oBaseAddress);
-		printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
 		Sleep(500);
 	}
+	printf("进程id：%d\n", oPID);
+	printf("基址：%d\n", oBaseAddress);
+	printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
 	return oBaseAddress;
 }
 
@@ -166,54 +174,70 @@ std::string get_aim_key();
 void Overlay::RenderEsp()
 {
 	next = false;
-	if (show_text_menu)
-	{
+	
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::SetNextWindowSize(ImVec2((float)getWidth(), (float)getHeight()));
 		ImGui::Begin(XorStr("Text_Menu"), (bool*)true, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus);
-		std::string show_menu = XorStr(u8"显示文字菜单—[HOME]");
-		std::string menu0 = XorStr(u8"方框透视 - [F5]");
-		std::string menu1 = XorStr(u8"敌人发光 - [F6]");
-		std::string menu2 = XorStr(u8"物品发光 - [F7]");
-		std::string menu3 = XorStr(u8"开关自瞄 - [F8]");
-		std::string menu3_1 = XorStr(u8"自瞄平滑度: ") + std::to_string(aSmoothAmount) + XorStr(u8" — [<-] [->]");
-		std::string menu3_2 = XorStr(u8"自瞄键： ") + get_aim_key() + XorStr(u8" — [Shift + <-] [Shift + ->]");
+		if (show_text_menu)
+		{
+			std::string show_menu = XorStr(u8"显示文字菜单—[HOME]");
+			std::string menu0 = XorStr(u8"方框透视 - [F5]");
+			std::string menu1 = XorStr(u8"敌人发光 - [F6]");
+			std::string menu2 = XorStr(u8"物品发光 - [F7]");
+			std::string menu3 = XorStr(u8"观众名单 - [F9]");
+			std::string menu5 = XorStr(u8"开关假蹲 - [F10]");
+			std::string menu4 = XorStr(u8"开关自瞄 - [F8]");
+			std::string menu4_1 = XorStr(u8"自瞄平滑度: ") + std::to_string(aSmoothAmount) + XorStr(u8" — [<-] [->]");
+			std::string menu4_2 = XorStr(u8"自瞄键： ") + get_aim_key() + XorStr(u8" — [Shift + <-] [Shift + ->]");
 
-		String(ImVec2(200, 290), GREEN, show_menu.c_str(), text_menu_font_size);
-		if (!esp) {
-			String(ImVec2(200, 290+10* text_menu_font_size), RED, menu0.c_str(), text_menu_font_size);
-		}
-		else
-		{
-			String(ImVec2(200, 290 + 10 * text_menu_font_size), GREEN, menu0.c_str(), text_menu_font_size);
-		}if (!player_glow) {
-			String(ImVec2(200, 290 + 20 * text_menu_font_size), RED, menu1.c_str(), text_menu_font_size);
-		}
-		else
-		{
-			String(ImVec2(200, 290 + 20 * text_menu_font_size), GREEN, menu1.c_str(), text_menu_font_size);
-		}
-		if (!item_glow) {
-			String(ImVec2(200, 290 + 30 * text_menu_font_size), RED, menu2.c_str(), text_menu_font_size);
-		}
-		else
-		{
-			String(ImVec2(200, 290 + 30 * text_menu_font_size), GREEN, menu2.c_str(), text_menu_font_size);
-		}if (!aim_enable) {
-			String(ImVec2(200, 290 + 40 * text_menu_font_size), RED, menu3.c_str(), text_menu_font_size);
-		}
-		else
-		{
-			String(ImVec2(200, 290 + 40 * text_menu_font_size), GREEN, menu3.c_str(), text_menu_font_size);
-			String(ImVec2(200, 290 + 50 * text_menu_font_size), GREEN, menu3_1.c_str(), text_menu_font_size);
-			String(ImVec2(200, 290 + 60 * text_menu_font_size), GREEN, menu3_2.c_str(), text_menu_font_size);
+			String(ImVec2(200, 290), GREEN, show_menu.c_str(), text_menu_font_size);
+			if (!esp) {
+				String(ImVec2(200, 290 + 10 * text_menu_font_size), RED, menu0.c_str(), text_menu_font_size);
+
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 10 * text_menu_font_size), GREEN, menu0.c_str(), text_menu_font_size);
+			}if (!player_glow) {
+				String(ImVec2(200, 290 + 20 * text_menu_font_size), RED, menu1.c_str(), text_menu_font_size);
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 20 * text_menu_font_size), GREEN, menu1.c_str(), text_menu_font_size);
+			}
+			if (!item_glow) {
+				String(ImVec2(200, 290 + 30 * text_menu_font_size), RED, menu2.c_str(), text_menu_font_size);
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 30 * text_menu_font_size), GREEN, menu2.c_str(), text_menu_font_size);
+			}if (!show_watcher) {
+				String(ImVec2(200, 290 + 40 * text_menu_font_size), RED, menu3.c_str(), text_menu_font_size);
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 40 * text_menu_font_size), GREEN, menu3.c_str(), text_menu_font_size);
+			}if (!aim_enable) {
+				String(ImVec2(200, 290 + 50 * text_menu_font_size), RED, menu4.c_str(), text_menu_font_size);
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 50 * text_menu_font_size), GREEN, menu4.c_str(), text_menu_font_size);
+				String(ImVec2(200, 290 + 60 * text_menu_font_size), GREEN, menu4_1.c_str(), text_menu_font_size);
+				String(ImVec2(200, 290 + 70 * text_menu_font_size), GREEN, menu4_2.c_str(), text_menu_font_size);
+			}if (!fakeduck) {
+				String(ImVec2(200, 290 + 80 * text_menu_font_size), RED, menu5.c_str(), text_menu_font_size);
+			}
+			else
+			{
+				String(ImVec2(200, 290 + 80 * text_menu_font_size), GREEN, menu5.c_str(), text_menu_font_size);
+			}
 		}
 		ImGui::End();
-	}
-	if (g_Base != 0 && esp)
+	if (g_Base != 0 && (esp||show_watcher))
 	{
 		memset(players, 0, sizeof(players));
-		while (!next && esp)
+		while (!next && (esp||show_watcher))
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
@@ -222,64 +246,88 @@ void Overlay::RenderEsp()
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
 			ImGui::SetNextWindowSize(ImVec2((float)getWidth(), (float)getHeight()));
 			ImGui::Begin(XorStr("##esp"), (bool*)true, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
+			int watch_num = 0;
+			std::string watcher = XorStr(u8"观众人数：");
+			std::string Line = XorStr(u8"————————————");
+			String(20, ImVec2(10, 290), RED, watcher.c_str());
+			String(20, ImVec2(10, 290 + 20), RED, Line.c_str());
 			for (int i = 0; i < 64; i++)
 			{
-				if (players[i].health > 0 && players[i].dist > 1 && (players[i].dist/39.62)< esp_max_dist)
-				{
-					std::string distance = std::to_string(players[i].dist / 39.62);
-					distance = distance.substr(0, distance.find('.')) + "m(" + std::to_string(players[i].entity_team) + ")";
-					std::string health = std::to_string(players[i].health);
-					health = XorStr(u8"血：") + health;
-					std::string shield = std::to_string(players[i].shield);
-					shield = XorStr(u8"甲：") + shield;
-					if (v.box)
+				if (esp) {
+					if (players[i].health > 0 && players[i].dist > 1 && (players[i].dist / 39.62) < esp_max_dist)
 					{
-						if (players[i].visible)
+						std::string distance = std::to_string(players[i].dist / 39.62);
+						distance = distance.substr(0, distance.find('.')) + "m(" + std::to_string(players[i].entity_team) + ")";
+						std::string health = std::to_string(players[i].health);
+						health = XorStr(u8"血：") + health;
+						std::string shield = std::to_string(players[i].shield);
+						shield = XorStr(u8"甲：") + shield;
+						if (v.box)
 						{
-							if (players[i].dist < esp_max_dist)
-								DrawBox(RED, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
+							if (players[i].visible)
+							{
+								if (players[i].dist < esp_max_dist)
+									DrawBox(RED, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
+								else
+									DrawBox(ORANGE, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
+							}
 							else
-								DrawBox(ORANGE, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //BOX
+							{
+								DrawBox(WHITE, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //white if player not visible
+							}
 						}
-						else
+
+						if (v.line)
+							DrawLine(ImVec2((float)(getWidth() / 2), (float)getHeight()), ImVec2(players[i].b_x, players[i].b_y), BLUE, 1); //LINE FROM MIDDLE SCREEN
+
+						if (v.distance)
 						{
-							DrawBox(WHITE, players[i].boxMiddle, players[i].h_y, players[i].width, players[i].height); //white if player not visible
+							if (players[i].knocked)
+								String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), RED, distance.c_str(), esp_font_size);  //DISTANCE
+							else
+								String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), GREEN, distance.c_str(), esp_font_size);  //DISTANCE
 						}
-					}
 
-					if (v.line)
-						DrawLine(ImVec2((float)(getWidth() / 2), (float)getHeight()), ImVec2(players[i].b_x, players[i].b_y), BLUE, 1); //LINE FROM MIDDLE SCREEN
-
-					if (v.distance)
-					{
-						if (players[i].knocked)
-							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), RED, distance.c_str(), esp_font_size);  //DISTANCE
-						else
-							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 1)), GREEN, distance.c_str(), esp_font_size);  //DISTANCE
-					}
-
-					if (v.healthbar)
-					{
-						ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 5, players[i].height, players[i].health, 100); //health bar
-						String(ImVec2(players[i].boxMiddle, (players[i].b_y + 10* esp_font_size)), GREEN, health.c_str(), esp_font_size);//show health
-					}
-					if (v.shieldbar) {
-						ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 5, players[i].height, players[i].shield, 125); //shield bar
-						switch (players[i].max_shield)
+						if (v.healthbar)
 						{
-						case 50:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
-						case 75:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), BLUE, shield.c_str(), esp_font_size); break;
-						case 100:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), PURPLE, shield.c_str(), esp_font_size); break;
-						case 125:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), RED, shield.c_str(), esp_font_size); break;
-						default:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20* esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
+							ProgressBar((players[i].b_x - (players[i].width / 2.0f) - 4), (players[i].b_y - players[i].height), 5, players[i].height, players[i].health, 100); //health bar
+							String(ImVec2(players[i].boxMiddle, (players[i].b_y + 10 * esp_font_size)), GREEN, health.c_str(), esp_font_size);//show health
 						}
+						if (v.shieldbar) {
+							ProgressBar((players[i].b_x + (players[i].width / 2.0f) + 1), (players[i].b_y - players[i].height), 5, players[i].height, players[i].shield, 125); //shield bar
+							switch (players[i].max_shield)
+							{
+							case 50:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20 * esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
+							case 75:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20 * esp_font_size)), BLUE, shield.c_str(), esp_font_size); break;
+							case 100:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20 * esp_font_size)), PURPLE, shield.c_str(), esp_font_size); break;
+							case 125:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20 * esp_font_size)), RED, shield.c_str(), esp_font_size); break;
+							default:String(ImVec2(players[i].boxMiddle, (players[i].b_y + 20 * esp_font_size)), WHITE, shield.c_str(), esp_font_size); break;
+							}
+						}
+						if (v.name)
+							String(ImVec2(players[i].boxMiddle, (players[i].b_y - players[i].height - 15)), WHITE, players[i].name);
 					}
-					if (v.name)
-						String(ImVec2(players[i].boxMiddle, (players[i].b_y - players[i].height - 15)), WHITE, players[i].name);
+				}
+				if (show_watcher) {
+						
+						if (players[i].Observer != 0&& players[i].Observer != 7 && players[i].dead == 1)
+						{
+							String(ImVec2(5, 290 + (watch_num + 2) * 20), GREEN, std::to_string(players[i].dead).c_str());
+							String(ImVec2(10, 290 + (watch_num + 2) * 20), BLUE, std::to_string(players[i].Observer).c_str());
+							String(ImVec2(20, 290 + (watch_num + 2) * 20), GREEN, players[i].name);
+							watch_num++;
+						}
+						else if (players[i].Observer == 0 && players[i].Observer != 7 && players[i].dead !=0 )
+						{
+							String(ImVec2(5, 290 + (watch_num + 2) * 20), GREEN, std::to_string(players[i].dead).c_str());
+							String(ImVec2(10, 290 + (watch_num + 2) * 20), BLUE, std::to_string(players[i].Observer).c_str());
+							String(ImVec2(20, 290 + (watch_num + 2) * 20), RED, players[i].name);
+							watch_num++;
+						}
 				}
 			}
-
+			String(ImVec2(100, 290), GREEN, std::to_string(watch_num).c_str());
+			watch_num = 0;
 			ImGui::End();
 		}
 	}
@@ -421,9 +469,9 @@ void player_glow_f(DWORD64 Entity, float* color)
 	if (player_glow) {
 		write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 		write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-		BorderSize_c = (int8_t)BorderSize;
-		TransparentLevel_c = (int8_t)TransparentLevel;
-		write<GlowMode>(Entity + GLOW_TYPE, { player_main_glow_type,player_border_glow_type,BorderSize_c,TransparentLevel_c }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+		//BorderSize_c = (int8_t)BorderSize;
+		//TransparentLevel_c = (int8_t)TransparentLevel;
+		write<GlowMode>(Entity + GLOW_TYPE, { (int8_t)(player_main_glow_type+100),(int8_t)(player_border_glow_type+100),(int8_t)BorderSize,(int8_t)TransparentLevel }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 		write<float>(Entity + GLOW_DISTANCE, player_glow_distance * 3000.0f / 70.0f);//玩家发光距离
 		write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness of enemies
 		write<float>(Entity + 0x1D4, color[1] * 255);  // g
@@ -445,7 +493,7 @@ void item_glow_f(DWORD64 Entity, float* color)
 {
 	write<int>(Entity + OFFSET_GLOW_ENABLE, 1); // glow enable: 1 = enabled, 2 = disabled
 	write<int>(Entity + OFFSET_GLOW_THROUGH_WALLS, 2); // glow through walls: 2 = enabled, 5 = disabled
-	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { item_main_glow_type,item_border_glow_type,30,70 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+	write<GlowMode>(Entity + ITEM_GLOW_TYPE, { (int8_t)(item_main_glow_type+100),(int8_t)(item_border_glow_type+100),30,70 }); // glow type: GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
 	write<float>(Entity + GLOW_DISTANCE, item_glow_distance * 3000.0f / 70.0f);//物品发光距离
 	write<float>(Entity + 0x1D0, color[0] * 255); // r color/brightness
 	write<float>(Entity + 0x1D4, color[1] * 255);  // g
@@ -556,6 +604,24 @@ void aim_func(int closestX, int closestY, int crosshairX, int crosshairY) {
 		}
 	}
 }
+/*void third_person_func(uintptr_t oBaseAddress) {
+	if (thirdperson && !tmp_third_person)
+	{
+		write<int>(oBaseAddress + OFFSET_THIRDPERSON2, 2);
+		write<int>(oBaseAddress + OFFSET_THIRDPERSON3, 2);
+		//int thridperson1 = read<int>(oBaseAddress + OFFSET_THIRDPERSON1);
+		//int thridperson2 = read<int>(oBaseAddress + OFFSET_THIRDPERSON2);
+		//int thridperson3 = read<int>(oBaseAddress + OFFSET_THIRDPERSON3);
+		//printf("%d %d %d\n",thridperson1, thridperson2, thridperson3);
+		tmp_third_person = true;
+	}
+	else if (!thirdperson && tmp_third_person)
+	{
+		write<int>(oBaseAddress + OFFSET_THIRDPERSON2, -1);
+		write<int>(oBaseAddress + OFFSET_THIRDPERSON2, 0);
+		tmp_third_person = false;
+	}
+}/**/
 
 int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 {
@@ -626,35 +692,65 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			item_glow = !item_glow;
 			Sleep(100);
 		}
-		if (IsKeyDown(VK_F8))//F8 打开自瞄
+		if (IsKeyDown(VK_F8))//F8 开关自瞄
 		{
 			//aim_enable = true;
 			aim_enable = !aim_enable;
 			Sleep(100);
 		}
-		/*if (IsKeyDown(VK_F9))//F9 关闭自瞄
+		if (IsKeyDown(VK_F9))//F9 开关观众列表
 		{
-			aim_enable = false;
-		}*/
-		if ( !((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_LEFT) && aSmoothAmount > 0) {
+			show_watcher = !show_watcher;
+			Sleep(200);
+		}if (IsKeyDown(VK_F10))//F9 开关假蹲
+		{
+			fakeduck = !fakeduck;
+			Sleep(100);
+		}
+		if ( !(GetAsyncKeyState(VK_SHIFT) & 0x8000) && IsKeyDown(VK_LEFT) && aSmoothAmount > 0) {
 			aSmoothAmount -= 1;//←降低自瞄平滑度
 			Sleep(100);
 		}
-		if ( !((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_RIGHT) && aSmoothAmount < 30) {
+		if ( !(GetAsyncKeyState(VK_SHIFT) & 0x8000) && IsKeyDown(VK_RIGHT) && aSmoothAmount < 30) {
 			aSmoothAmount += 1;//→增加自瞄平滑度
 			Sleep(100);
 		}
-		if (((GetAsyncKeyState(VK_LSHIFT) & 0x8000)|| (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_LEFT) && aim_key > 0) {
-			aim_key -= 1;//Shift+←更改自瞄按键
-			Sleep(100);
+		if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) && IsKeyDown(VK_LEFT)) {
+			if (aim_key > 0)
+			{
+				aim_key -= 1;//Shift+←更改自瞄按键
+				Sleep(100);
+			}
+			else {
+				aim_key = 3;
+				Sleep(100);
+			}
 		}
-		if (((GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000)) && IsKeyDown(VK_RIGHT) && aim_key < 3) {
-			aim_key += 1;//Shift+→更改自瞄按键
-			Sleep(100);
+		if (((GetAsyncKeyState(VK_SHIFT) & 0x8000)) && IsKeyDown(VK_RIGHT)) {
+			if (aim_key < 3) {
+				aim_key += 1;//Shift+→更改自瞄按键
+				Sleep(100);
+			}
+			else {
+				aim_key = 0;
+				Sleep(100);
+			}
 		}
 		if (IsKeyDown(VK_HOME)) {
 			show_text_menu = !show_text_menu;//HOME 键开关文字菜单显示
 			Sleep(200);
+		}
+		/*if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) && IsKeyDown(VK_HOME)) {
+			show_watcher = !show_watcher;//SHIFT + HOME 键开关观众名单
+			Sleep(200);
+		}*/
+		if (fakeduck) {
+			if (!GetAsyncKeyState(0x41) && !GetAsyncKeyState(0x57) && !GetAsyncKeyState(0x53) && !GetAsyncKeyState(0x44) && !GetAsyncKeyState(VK_CONTROL) && !GetAsyncKeyState(VK_LSHIFT)) {
+				write<int>(oBaseAddress + OFFSET_KEY_DUCK + 0x08, 5);
+				Sleep(25);
+				write<int>(oBaseAddress + OFFSET_KEY_DUCK + 0x08, 4);
+				Sleep(25);
+			}
 		}
 
 		/*if (IsKeyDown(VK_F6) && k_f6 == 0)
@@ -708,6 +804,15 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			aiming = true;
 		else
 			aiming = false;*/
+		//third_person_func(oBaseAddress);//第三人称视角
+		if (keepjump) {
+			if (GetAsyncKeyState(VK_SPACE)) {//连跳
+				write<int>(oBaseAddress + OFFSET_KEY_JUMP + 0x08, 5);
+				Sleep(5);
+				write<int>(oBaseAddress + OFFSET_KEY_JUMP + 0x08, 4);
+				Sleep(5);
+			}
+		}
 		if (item_glow && item_glow_ok)
 		{
 			std::thread item_th(item_glow_func, oBaseAddress);//,std::ref(item_glow_ok));
@@ -737,6 +842,7 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 			for (int i = 0; i < 64; i++)
 			{
 				DWORD64 Entity = GetEntityById(i, oBaseAddress);
+				DWORD64 EntityList = oBaseAddress + OFFSET_ENTITYLIST;
 				if (Entity == 0)
 					continue;
 				DWORD64 EntityHandle = read<DWORD64>(Entity + OFFSET_NAME);
@@ -772,8 +878,15 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 					int playerTeamID = read<int>(locPlayer + OFFSET_TEAM);
 
 					//Get player health
-					int dead = read<int>(Entity + OFFSET_LIFESTATE);//dead == 0，player is dead
-					players[j].health = read<int>(Entity + OFFSET_HEALTH);
+					players[j].dead = read<int>(Entity + OFFSET_LIFESTATE);//dead == 1，player is dead
+					if(players[j].dead != 0)
+					{
+						players[j].health = 0;
+					}
+					else
+					{
+						players[j].health = read<int>(Entity + OFFSET_HEALTH);
+					}
 
 					// Get entity team ID
 					int entTeamID = read<int>(Entity + OFFSET_TEAM);
@@ -782,6 +895,11 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 					//Get player shield
 					players[j].shield = read<int>(Entity + OFFSET_SHIELD);
 					players[j].max_shield = read<int>(Entity + OFFSET_SHIELD_MAX);
+
+
+					players[j].Observer = read<int>(Entity + OFFSET_OBSERVER_MODE);
+					//if(players[j].Observer!=7)
+					//printf("%s %d\n", players[j].name, players[j].Observer);
 					
 
 					// Is it an enemy
@@ -950,6 +1068,181 @@ int gui(uintptr_t oBaseAddress/*int argc, char** argv*/)
 		system(XorStr("taskkill /F /T /IM overlay_ap.exe")); //custom overlay process name
 	return 0;
 }
+std::string get_path() {
+	char path[200];                        //用于存放获取路径的信息    
+	getcwd(path, sizeof(path));
+	return path;
+}
+bool file_to_setting(std::string path) {
+	FILE* fp;
+	path += "\\setting.ini";
+	if (NULL == (fp = fopen(path.c_str(), "r")))
+		return false;
+	else fclose(fp);
+	char c[30];
+	float f[3] = {0,0,0};
+	int ref;
+	//[自瞄]
+	GetIniKeyString("自瞄", "自瞄按键", path.c_str(), &aim_key);// if (ref == -2)return false;
+	GetIniKeyString("自瞄", "自瞄窗口大小", path.c_str(), &xFOV);
+	GetIniKeyString("自瞄", "平滑度", path.c_str(), &aSmoothAmount);
+	
+	//[ESP]
+	GetIniKeyString(XorStr("ESP"), XorStr("ESP字体大小"), path.c_str(), &esp_font_size);
+	GetIniKeyString(XorStr("ESP"), XorStr("文字菜单字体大小"), path.c_str(), &text_menu_font_size);
+	GetIniKeyString(XorStr("ESP"), "名字", path.c_str(), c); v.name = c2bool(c);
+	GetIniKeyString(XorStr("ESP"), "护甲条", path.c_str(), c); v.shieldbar = c2bool(c);
+	GetIniKeyString(XorStr("ESP"), "血条", path.c_str(), c); v.healthbar = c2bool(c);
+	GetIniKeyString(XorStr("ESP"), "距离", path.c_str(), c); v.distance = c2bool(c);
+	GetIniKeyString(XorStr("ESP"), "方框", path.c_str(), c); v.box = c2bool(c);
+	GetIniKeyString(XorStr("ESP"), "连线", path.c_str(), c); v.line = c2bool(c);
+	
+	//[物体发光]
+	GetIniKeyString("物品发光", "物品发光最大遍历数", path.c_str(), &max_check_glow_item_num);
+	GetIniKeyString("物体发光", "涡轮", path.c_str(), c); turbo_glow = c2bool(c); //if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	GetIniKeyString("物体发光", "加速装填器", path.c_str(), c); fast_reload_glow = c2bool(c); //if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	GetIniKeyString("物体发光", "金枪", path.c_str(), c); glow_goldgun = c2bool(c); //if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	GetIniKeyString("物体发光", "空投枪和红甲", path.c_str(), c); glow_supply_gun = c2bool(c);// if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	GetIniKeyString("物体发光", "紫金装备", path.c_str(), c); glow_suit = c2bool(c); //if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	GetIniKeyString("物体发光", "紫金配件", path.c_str(), c); glow_gunPart = c2bool(c);// if (c2bool(c))printf("true\n"); if (!c2bool(c))printf("false\n");
+	
+	GetIniKeyString("物体发光", "金色r", path.c_str(), &gold_item_col[0],255);
+	GetIniKeyString("物体发光", "金色g", path.c_str(), &gold_item_col[1],255);
+	GetIniKeyString("物体发光", "金色b", path.c_str(), &gold_item_col[2],255);
+		
+	GetIniKeyString("物体发光", "红色r", path.c_str(), &red_item_col[0],255);
+	GetIniKeyString("物体发光", "红色g", path.c_str(), &red_item_col[1], 255);
+	GetIniKeyString("物体发光", "红色b", path.c_str(), &red_item_col[2], 255);
+		
+	GetIniKeyString("物体发光", "紫色r", path.c_str(), &purple_item_col[0], 255);
+	GetIniKeyString("物体发光", "紫色g", path.c_str(), &purple_item_col[1], 255);
+	GetIniKeyString("物体发光", "紫色b", path.c_str(), &purple_item_col[2], 255);
+			
+	GetIniKeyString("物体发光", "蓝色r", path.c_str(), &blue_item_col[0], 255);
+	GetIniKeyString("物体发光", "蓝色g", path.c_str(), &blue_item_col[1], 255);
+	GetIniKeyString("物体发光", "蓝色b", path.c_str(), &blue_item_col[2], 255);
+			
+	GetIniKeyString("物体发光", "枪械发光颜色r", path.c_str(), &gun_glow_col[0], 255);
+	GetIniKeyString("物体发光", "枪械发光颜色g", path.c_str(), &gun_glow_col[1], 255);
+	GetIniKeyString("物体发光", "枪械发光颜色b", path.c_str(), &gun_glow_col[2], 255);
+				
+	GetIniKeyString("物体发光", "瞄准镜发光颜色r", path.c_str(), &zoom_col[0], 255);
+	GetIniKeyString("物体发光", "瞄准镜发光颜色g", path.c_str(), &zoom_col[1], 255);
+	GetIniKeyString("物体发光", "瞄准镜发光颜色b", path.c_str(), &zoom_col[2], 255);
+
+	GetIniKeyString("物体发光", "物品主发光类型", path.c_str(), &item_main_glow_type);
+	GetIniKeyString("物体发光", "物品发光边界类型", path.c_str(), &item_border_glow_type);
+	GetIniKeyString("物体发光", "物品发光距离", path.c_str(), &item_glow_distance);
+
+	//[玩家发光]
+	GetIniKeyString("玩家发光", "玩家发光", path.c_str(), c); player_glow = c2bool(c);
+	GetIniKeyString("玩家发光", "玩家发光主类型", path.c_str(), &player_main_glow_type);
+	GetIniKeyString("玩家发光", "玩家发光边界类型", path.c_str(), &player_border_glow_type);
+	GetIniKeyString("玩家发光", "玩家发光边界尺寸", path.c_str(), &BorderSize);
+	GetIniKeyString("玩家发光", "玩家发光透明度", path.c_str(), &TransparentLevel);
+	GetIniKeyString("玩家发光", "玩家发光距离", path.c_str(), &player_glow_distance);
+
+	GetIniKeyString("玩家发光", "可见敌人颜色r", path.c_str(), &playerglow1[0], 255);
+	GetIniKeyString("玩家发光", "可见敌人颜色g", path.c_str(), &playerglow1[1], 255);
+	GetIniKeyString("玩家发光", "可见敌人颜色b", path.c_str(), &playerglow1[2], 255);
+	
+	GetIniKeyString("玩家发光", "可见倒地敌人颜色r", path.c_str(), &playerglow2[0], 255);
+	GetIniKeyString("玩家发光", "可见倒地敌人颜色g", path.c_str(), &playerglow2[1], 255);
+	GetIniKeyString("玩家发光", "可见倒地敌人颜色b", path.c_str(), &playerglow2[2], 255);
+	
+	GetIniKeyString("玩家发光", "不可见敌人颜色r", path.c_str(), &playerglow3[0], 255);
+	GetIniKeyString("玩家发光", "不可见敌人颜色g", path.c_str(), &playerglow3[1], 255);
+	GetIniKeyString("玩家发光", "不可见敌人颜色b", path.c_str(), &playerglow3[2], 255);
+	
+	GetIniKeyString("玩家发光", "不可见倒地敌人颜色r", path.c_str(), &playerglow4[0], 255);
+	GetIniKeyString("玩家发光", "不可见倒地敌人颜色g", path.c_str(), &playerglow4[1], 255);
+	GetIniKeyString("玩家发光", "不可见倒地敌人颜色b", path.c_str(), &playerglow4[2], 255);
+	/**/
+	return true;
+}
+bool setting_to_file(std::string path) {
+	path += "\\setting.ini";
+	//path = ".\setting.ini";
+	int ref,i=1;
+
+	//[AIM]
+	PutIniKeyString("自瞄", "自瞄按键", aim_key, path.c_str());
+	PutIniKeyString("自瞄", "自瞄窗口大小", xFOV, path.c_str());
+	PutIniKeyString("自瞄", "平滑度", aSmoothAmount, path.c_str());
+
+	//[ESP]
+	ref = PutIniKeyString("ESP", "ESP字体大小", esp_font_size, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "文字菜单字体大小", text_menu_font_size, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "名字", v.name, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "护甲条", v.shieldbar, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "血条", v.healthbar, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "距离", v.distance, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("ESP", "连线", v.line, path.c_str()); //printf("%d:%d\n", i++, ref);
+	/**/
+	//[物体发光]
+	ref = PutIniKeyString("物体发光", "物品发光最大遍历数", max_check_glow_item_num, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "涡轮", turbo_glow, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "加速装填器", fast_reload_glow, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "金枪", glow_goldgun, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "空投枪和红甲", glow_supply_gun, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "紫金装备", glow_suit, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "紫金配件", glow_gunPart, path.c_str()); //printf("%d:%d\n", i++, ref);
+
+	ref = PutIniKeyString("物体发光", "金色r", gold_item_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "金色g", gold_item_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "金色b", gold_item_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+
+	ref = PutIniKeyString("物体发光", "红色r", red_item_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "红色g", red_item_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "红色b", red_item_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+
+	ref = PutIniKeyString("物体发光", "紫色r", purple_item_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "紫色g", purple_item_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "紫色b", purple_item_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("物体发光", "蓝色r", blue_item_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "蓝色g", blue_item_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "蓝色b", blue_item_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("物体发光", "枪械发光颜色r", gun_glow_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "枪械发光颜色g", gun_glow_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "枪械发光颜色b", gun_glow_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("物体发光", "瞄准镜发光颜色r", zoom_col[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "瞄准镜发光颜色g", zoom_col[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "瞄准镜发光颜色b", zoom_col[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("物体发光", "物品主发光类型", item_main_glow_type, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "物品发光边界类型", item_border_glow_type, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("物体发光", "物品发光距离", item_glow_distance, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	//[玩家发光]
+	ref = PutIniKeyString("玩家发光", "玩家发光", player_glow, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "玩家发光主类型", player_main_glow_type, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "玩家发光边界类型", player_border_glow_type, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "玩家发光边界尺寸", BorderSize, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "玩家发光透明度", TransparentLevel, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "玩家发光距离", player_glow_distance, path.c_str()); //printf("%d:%d\n", i++, ref);
+
+	ref = PutIniKeyString("玩家发光", "可见敌人颜色r", playerglow1[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "可见敌人颜色g", playerglow1[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "可见敌人颜色b", playerglow1[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("玩家发光", "可见倒地敌人颜色r", playerglow2[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "可见倒地敌人颜色g", playerglow2[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "可见倒地敌人颜色b", playerglow2[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("玩家发光", "不可见敌人颜色r", playerglow3[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "不可见敌人颜色g", playerglow3[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "不可见敌人颜色b", playerglow3[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	ref = PutIniKeyString("玩家发光", "不可见倒地敌人颜色r", playerglow4[0] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "不可见倒地敌人颜色g", playerglow4[1] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	ref = PutIniKeyString("玩家发光", "不可见倒地敌人颜色b", playerglow4[2] * 255, path.c_str()); //printf("%d:%d\n", i++, ref);
+	
+	//printf("over\n");
+	return true;
+}
 
 int main(int argCount, char** argVector)
 {
@@ -959,6 +1252,8 @@ int main(int argCount, char** argVector)
 
 	oBaseAddress = init_main();
 	g_Base = oBaseAddress;
+	std::string path = get_path();
+	file_to_setting(path);
 	//while (!hwnd)
 	//{
 	//	hwnd = FindWindowA(NULL, ("Apex Legends"));
@@ -979,7 +1274,6 @@ int main(int argCount, char** argVector)
 	//	printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
 	//	Sleep(500);
 	//}
-	while (active) {
 		gui(oBaseAddress);
-	}
+		setting_to_file(path);
 }

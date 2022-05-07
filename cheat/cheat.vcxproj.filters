@@ -28,6 +28,9 @@
     <ClCompile Include="gui\imgui\imgui_impl_win32.cpp">
       <Filter>gui\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="verify.c">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gui\font.h">

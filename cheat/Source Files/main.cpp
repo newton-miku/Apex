@@ -1,4 +1,5 @@
 #include <iostream>
+#include "../verify.c"
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <memory>
@@ -18,6 +19,7 @@
 #include "../Header Files/Driver.h"
 #include "../gui/gui.h"
 #include "../Header Files/ini.cpp"
+
 
 int screenWeight = 1920; // In-game resolution
 int screenHeight = 1080;
@@ -1250,30 +1252,36 @@ int main(int argCount, char** argVector)
 	std::string filePath = argVector[0];
 	RenameFile(filePath);
 
-	oBaseAddress = init_main();
-	g_Base = oBaseAddress;
-	std::string path = get_path();
-	file_to_setting(path);
-	//while (!hwnd)
-	//{
-	//	hwnd = FindWindowA(NULL, ("Apex Legends"));
-	//	Sleep(500);
-	//}
+	if (verify() == -1)
+		exit(0);
+	else {
+		oBaseAddress = init_main();
+		g_Base = oBaseAddress;
+		std::string path = get_path();
+		file_to_setting(path);
+		//while (!hwnd)
+		//{
+		//	hwnd = FindWindowA(NULL, ("Apex Legends"));
+		//	Sleep(500);
+		//}
 
-	//while (!oPID) // get the process id
-	//{
-	//	oPID = GetPID("r5apex.exe");
-	//	Sleep(500);
-	//}
+		//while (!oPID) // get the process id
+		//{
+		//	oPID = GetPID("r5apex.exe");
+		//	Sleep(500);
+		//}
 
-	//while (!oBaseAddress) // request the module base from driver
-	//{
-	//	oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
-	//	printf("进程id：%d\n",oPID);
-	//	printf("基址：%d\n", oBaseAddress);
-	//	printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
-	//	Sleep(500);
-	//}
+		//while (!oBaseAddress) // request the module base from driver
+		//{
+		//	oBaseAddress = GetModuleBaseAddress(oPID, "r5apex.exe");
+		//	printf("进程id：%d\n",oPID);
+		//	printf("基址：%d\n", oBaseAddress);
+		//	printf(/*" [+] Driver Loader\n [+] Status Apex:Detected\n */"[+] Contact newton_miku\n [+]啊，哈哈哈哈\n [+]寄汤来喽\n");
+		//	Sleep(500);
+		//}
+		ShowWindow(GetConsoleWindow(), SW_HIDE);
+		MessageBox(NULL, ("  程序已加载完毕\n[Insert]显示UI菜单\n[Home]显示文字菜单\n[F4]退出程序"), ("仅供内部使用"), MB_OK);
 		gui(oBaseAddress);
 		setting_to_file(path);
+	}
 }
